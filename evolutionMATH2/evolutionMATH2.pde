@@ -16,8 +16,8 @@ PGraphics popUpImage;
 PGraphics segBarImage;
 boolean haveGround = true;
 int histBarsPerMeter = 5;
-String[] operationNames = {"#","time","px","py","+","-","*","÷","%","sin","sig","pres"};
-int[] operationAxons =    {0,   0,    0,   0,   2,  2,  2,  2,  2,  1,    1,   0};
+String[] operationNames = {"#", "time", "px", "py", "+", "-", "*", "÷", "%", "sin", "sig", "pres"};
+int[] operationAxons =    {0, 0, 0, 0, 2, 2, 2, 2, 2, 1, 1, 0};
 int operationCount = 12;
 String fitnessUnit = "m";
 String fitnessName = "Distance";
@@ -45,7 +45,7 @@ float totalNodeNausea = 0;
 
 float lineY1 = -0.08; // These are for the lines of text on each node.
 float lineY2 = 0.35;
-color axonColor = color(255,255,0);
+color axonColor = color(255, 255, 0);
 
 int windowWidth = 1280;
 int windowHeight = 720;
@@ -92,6 +92,7 @@ int[] p = {
   100, 200, 300, 400, 500, 600, 700, 800, 900, 910, 920, 930, 940, 950, 960, 970, 980, 990, 999
 };
 
+
 float inter(int a, int b, float offset) {
   return float(a)+(float(b)-float(a))*offset;
 }
@@ -101,6 +102,449 @@ float r() {
 int rInt() {
   return int(random(-0.01, 1.01));
 }
+
+abstract class ViewController {
+  abstract void draw();
+}
+
+ViewController rootViewController = new RootViewController(); // Singleton
+
+class RootViewController extends ViewController {
+  void draw() {
+    scale(windowSizeMultiplier);
+    if (menu == 0) {
+      background(255);
+      fill(100, 200, 100);
+      noStroke();
+      rect(windowWidth/2-200, 300, 400, 200);
+      fill(0);
+      text("EVOLUTION!", windowWidth/2, 200);
+      text("START", windowWidth/2, 430);
+    } else if (menu == 1) {
+      noStroke();
+      fill(0);
+      background(255, 200, 130);
+      textFont(font, 32);
+      textAlign(LEFT);
+      textFont(font, 96);
+      text("Generation "+max(genSelected, 0), 20, 100);
+      textFont(font, 28);
+      if (gen == -1) {
+        fill(100, 200, 100);
+        rect(20, 250, 200, 100);
+        fill(0);
+        text("Since there are no creatures yet, create 1000 creatures!", 20, 160);
+        text("They will be randomly created, and also very simple.", 20, 200);
+        text("CREATE", 56, 312);
+      } else {
+        fill(100, 200, 100);
+        rect(760, 20, 460, 40);
+        rect(760, 70, 460, 40);
+        rect(760, 120, 230, 40);
+        if (gensToDo >= 2) {
+          fill(128, 255, 128);
+        } else {
+          fill(70, 140, 70);
+        }
+        rect(990, 120, 230, 40);
+        fill(0);
+        text("Do 1 step-by-step generation.", 770, 50);
+        text("Do 1 quick generation.", 770, 100);
+        text("Do 1 gen ASAP.", 770, 150);
+        text("Do gens ALAP.", 1000, 150);
+        text("Median "+fitnessName, 50, 160);
+        textAlign(CENTER);
+        textAlign(RIGHT);
+        text(float(round(percentile.get(min(genSelected, percentile.size()-1))[14]*1000))/1000+" "+fitnessUnit, 700, 160);
+        drawHistogram(760, 410, 460, 280);
+        drawGraphImage();
+        if (saveFramesPerGeneration && gen > lastImageSaved) {
+          saveFrame("imgs//"+zeros(gen, 5)+".png");
+          lastImageSaved = gen;
+        }
+      }
+      if (gensToDo >= 1) {
+        gensToDo--;
+        if (gensToDo >= 1) {
+          startASAP();
+        }
+      }
+    } else if (menu == 2) {
+      creatures = 0;
+      background(220, 253, 102);
+      pushMatrix();
+      scale(10.0/scaleToFixBug);
+      for (int y = 0; y < 25; y++) {
+        for (int x = 0; x < 40; x++) {
+          n.clear();
+          m.clear();
+          int nodeNum = int(random(3, 6));
+          int muscleNum = int(random(nodeNum-1, nodeNum*3-6));
+          for (int i = 0; i < nodeNum; i++) {
+            n.add(new Node(random(-1, 1), random(-1, 1), 0, 0, 0.4, random(0, 1), random(0, 1), 
+              floor(random(0, operationCount)), floor(random(0, nodeNum)), floor(random(0, nodeNum)))); //replaced all nodes' sizes with 0.4, used to be random(0.1,1), random(0,1)
+          }
+          for (int i = 0; i < muscleNum; i++) {
+            int tc1 = 0;
+            int tc2 = 0;
+            int taxon = getNewMuscleAxon(nodeNum);
+            if (i < nodeNum-1) {
+              tc1 = i;
+              tc2 = i+1;
+            } else {
+              tc1 = int(random(0, nodeNum));
+              tc2 = tc1;
+              while (tc2 == tc1) {
+                tc2 = int(random(0, nodeNum));
+              }
+            }
+            float s = 0.8;
+            if (i >= 10) {
+              s *= 1.414;
+            }
+            float len = random(0.5, 1.5);
+            m.add(new Muscle(taxon, tc1, tc2, len, random(0.02, 0.08)));
+          }
+          toStableConfiguration(nodeNum, muscleNum);
+          adjustToCenter(nodeNum);
+          float heartbeat = random(40, 80);
+          c[y*40+x] = new Creature(y*40+x+1, new ArrayList<Node>(n), new ArrayList<Muscle>(m), 0, true, heartbeat, 1.0);
+          drawCreature(c[y*40+x], x*3+5.5, y*2.5+3, 0);
+          c[y*40+x].checkForOverlap();
+          c[y*40+x].checkForLoneNodes();
+          c[y*40+x].checkForBadAxons();
+        }
+      }
+      setMenu(3);
+      popMatrix();
+      noStroke();
+      fill(100, 100, 200);
+      rect(900, 664, 260, 40);
+      fill(0);
+      textAlign(CENTER);
+      textFont(font, 24);
+      text("Here are your 1000 randomly generated creatures!!!", windowWidth/2-200, 690);
+      text("Back", windowWidth-250, 690);
+    } else if (menu == 4) {
+      setGlobalVariables(c[creaturesTested]);
+      camZoom = 0.01;
+      setMenu(5);
+      if (!stepbystepslow) {
+        for (int i = 0; i < 1000; i++) {
+          setGlobalVariables(c[i]);
+          for (int s = 0; s < 900; s++) {
+            simulate();
+          }
+          setAverages();
+          setFitness(i);
+        }
+        setMenu(6);
+      }
+    }
+    if (menu == 5) { //simulate running
+      if (timer <= 900) {
+        background(120, 200, 255);
+        for (int s = 0; s < speed; s++) {
+          if (timer < 900) {
+            simulate();
+          }
+        }
+        setAverages();
+        if (speed < 30) {
+          for (int s = 0; s < speed; s++) {
+            camX += (averageX-camX)*0.06;
+            camY += (averageY-camY)*0.06;
+          }
+        } else {
+          camX = averageX;
+          camY = averageY;
+        }
+        pushMatrix();
+        translate(width/2.0, height/2.0);
+        scale(1.0/camZoom/scaleToFixBug);
+        translate(-camX*scaleToFixBug, -camY*scaleToFixBug);
+
+        drawPosts(0);
+        drawGround(0);
+        drawCreaturePieces(n, m, 0, 0, 0);
+        drawArrow(averageX);
+        popMatrix();
+        drawStats(windowWidth-10, 0, 0.7);
+        drawSkipButton();
+        drawOtherButtons();
+      }
+      if (timer == 900) {
+        if (speed < 30) {
+          noStroke();
+          fill(0, 0, 0, 130);
+          rect(0, 0, windowWidth, windowHeight);
+          fill(0, 0, 0, 255);
+          rect(windowWidth/2-500, 200, 1000, 240);
+          fill(255, 0, 0);
+          textAlign(CENTER);
+          textFont(font, 96);
+          text("Creature's "+fitnessName+":", windowWidth/2, 300);
+          text(nf(averageX*0.2, 0, 2) + " "+fitnessUnit, windowWidth/2, 400);
+        } else {
+          timer = 1020;
+        }
+        setFitness(creaturesTested);
+      }
+      if (timer >= 1020) {
+        setMenu(4);
+        creaturesTested++;
+        if (creaturesTested == 1000) {
+          setMenu(6);
+        }
+        camX = 0;
+      }
+      if (timer >= 900) {
+        timer += speed;
+      }
+    }
+    if (menu == 6) {
+      //sort
+      c2 = new ArrayList<Creature>(0);
+      for (int i = 0; i < 1000; i++) {
+        c2.add(c[i]);
+      }
+      c2 = quickSort(c2);
+      percentile.add(new Float[29]);
+      for (int i = 0; i < 29; i++) {
+        percentile.get(gen+1)[i] = c2.get(p[i]).d;
+      }
+      creatureDatabase.add(c2.get(999).copyCreature(-1));
+      creatureDatabase.add(c2.get(499).copyCreature(-1));
+      creatureDatabase.add(c2.get(0).copyCreature(-1));
+
+      Integer[] beginBar = new Integer[barLen];
+      for (int i = 0; i < barLen; i++) {
+        beginBar[i] = 0;
+      }
+      barCounts.add(beginBar);
+      Integer[] beginSpecies = new Integer[101];
+      for (int i = 0; i < 101; i++) {
+        beginSpecies[i] = 0;
+      }
+      for (int i = 0; i < 1000; i++) {
+        int bar = floor(c2.get(i).d*histBarsPerMeter-minBar);
+        if (bar >= 0 && bar < barLen) {
+          barCounts.get(gen+1)[bar]++;
+        }
+        int species = (c2.get(i).n.size()%10)*10+c2.get(i).m.size()%10;
+        beginSpecies[species]++;
+      }
+      speciesCounts.add(new Integer[101]);
+      speciesCounts.get(gen+1)[0] = 0;
+      int cum = 0;
+      int record = 0;
+      int holder = 0;
+      for (int i = 0; i < 100; i++) {
+        cum += beginSpecies[i];
+        speciesCounts.get(gen+1)[i+1] = cum;
+        if (beginSpecies[i] > record) {
+          record = beginSpecies[i];
+          holder = i;
+        }
+      }
+      topSpeciesCounts.add(holder);
+      if (stepbystep) {
+        drawScreenImage(0);
+        setMenu(7);
+      } else {
+        setMenu(10);
+      }
+    }
+    if (menu == 8) {
+      //cool sorting animation
+      background(220, 253, 102);
+      pushMatrix();
+      scale(10.0/scaleToFixBug);
+      float transition = 0.5-0.5*cos(min(float(timer)/60, PI));
+      for (int j = 0; j < 1000; j++) {
+        Creature cj = c2.get(j);
+        int j2 = cj.id-(gen*1000)-1;
+        int x1 = j2%40;
+        int y1 = floor(j2/40);
+        int x2 = j%40;
+        int y2 = floor(j/40)+1;
+        float x3 = inter(x1, x2, transition);
+        float y3 = inter(y1, y2, transition);
+        drawCreature(cj, x3*3+5.5, y3*2.5+4, 0);
+      }
+      popMatrix();
+      if (stepbystepslow) {
+        timer+=2;
+      } else {
+        timer+=10;
+      }
+      drawSkipButton();
+      if (timer > 60*PI) {
+        drawScreenImage(1);
+        setMenu(9);
+      }
+    }
+    float mX = mouseX/windowSizeMultiplier;
+    ;
+    float mY = mouseY/windowSizeMultiplier;
+    ;
+    prevStatusWindow = statusWindow;
+    if (abs(menu-9) <= 2 && gensToDo == 0 && !drag) {
+      if (abs(mX-639.5) <= 599.5) {
+        if (menu == 7 && abs(mY-329) <= 312) {
+          statusWindow = creaturesInPosition[floor((mX-40)/30)+floor((mY-17)/25)*40];
+        } else if (menu >= 9 && abs(mY-354) <= 312) {
+          statusWindow = floor((mX-40)/30)+floor((mY-42)/25)*40;
+        } else {
+          statusWindow = -4;
+        }
+      } else {
+        statusWindow = -4;
+      }
+    } else if (menu == 1 && genSelected >= 1 && gensToDo == 0 && !drag) {
+      statusWindow = -4;
+      if (abs(mY-250) <= 70) {
+        if (abs(mX-990) <= 230) {
+          float modX = (mX-760)%160;
+          if (modX < 140) {
+            statusWindow = floor((mX-760)/160)-3;
+          }
+        }
+      }
+    } else {
+      statusWindow = -4;
+    }
+    if (menu == 10) {
+      //Kill!
+      for (int j = 0; j < 500; j++) {
+        float f = float(j)/1000;
+        float rand = (pow(random(-1, 1), 3)+1)/2; //cube function
+        slowDies = (f <= rand);
+        int j2;
+        int j3;
+        if (slowDies) {
+          j2 = j;
+          j3 = 999-j;
+        } else {
+          j2 = 999-j;
+          j3 = j;
+        }
+        Creature cj = c2.get(j2);
+        cj.alive = true;
+        Creature ck = c2.get(j3);
+        ck.alive = false;
+      }
+      if (stepbystep) {
+        drawScreenImage(2);
+        setMenu(11);
+      } else {
+        setMenu(12);
+      }
+    }
+    if (menu == 12) { //Reproduce and mutate
+      justGotBack = true;
+      for (int j = 0; j < 500; j++) {
+        int j2 = j;
+        if (!c2.get(j).alive) j2 = 999-j;
+        Creature cj = c2.get(j2);
+        Creature cj2 = c2.get(999-j2);
+
+        c2.set(j2, cj.copyCreature(cj.id+1000));        //duplicate
+
+        c2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
+        n = c2.get(999-j2).n;
+        m = c2.get(999-j2).m;
+        toStableConfiguration(n.size(), m.size());
+        adjustToCenter(n.size());
+      }
+      for (int j = 0; j < 1000; j++) {
+        Creature cj = c2.get(j);
+        c[cj.id-(gen*1000)-1001] = cj.copyCreature(-1);
+      }
+      drawScreenImage(3);
+      gen++;
+      if (stepbystep) {
+        setMenu(13);
+      } else {
+        setMenu(1);
+      }
+    }
+    if (menu%2 == 1 && abs(menu-10) <= 3) {
+      image(screenImage, 0, 0, 1280, 720);
+    }
+    if (menu == 1 || gensToDo >= 1) {
+      mX = mouseX/windowSizeMultiplier;
+      ;
+      mY = mouseY/windowSizeMultiplier;
+      ;
+      noStroke();
+      if (gen >= 1) {
+        textAlign(CENTER);
+        if (gen >= 5) {
+          genSelected = round((sliderX-760)*(gen-1)/410)+1;
+        } else {
+          genSelected = round((sliderX-760)*gen/410);
+        }
+        if (drag) sliderX = min(max(sliderX+(mX-25-sliderX)*0.2, 760), 1170);
+        fill(100);
+        rect(760, 340, 460, 50);
+        fill(220);
+        rect(sliderX, 340, 50, 50);
+        int fs = 0;
+        if (genSelected >= 1) {
+          fs = floor(log(genSelected)/log(10));
+        }
+        fontSize = fontSizes[fs];
+        textFont(font, fontSize);
+        fill(0);
+        text(genSelected, sliderX+25, 366+fontSize*0.3333);
+      }
+      if (genSelected >= 1) {
+        textAlign(CENTER);
+        for (int k = 0; k < 3; k++) {
+          fill(220);
+          rect(760+k*160, 180, 140, 140);
+          pushMatrix();
+          translate(830+160*k, 290);
+          scale(60.0/scaleToFixBug);
+          drawCreature(creatureDatabase.get((genSelected-1)*3+k), 0, 0, 0);
+          popMatrix();
+        }
+        fill(0);
+        textFont(font, 16);
+        text("Worst Creature", 830, 310);
+        text("Median Creature", 990, 310);
+        text("Best Creature", 1150, 310);
+      }
+      if (justGotBack) justGotBack = false;
+    }
+    if (statusWindow >= -3) {
+      drawStatusWindow(prevStatusWindow == -4);
+      if (statusWindow >= -3 && !miniSimulation) {
+        openMiniSimulation();
+      }
+    }
+    /*if(menu >= 1){
+     fill(255);
+     rect(0,705,100,15);
+     fill(0);
+     textAlign(LEFT);
+     textFont(font,12);
+     int g = gensToDo;
+     if(gensToDo >= 10000){
+     g = 1000000000-gensToDo;
+     }
+     text(g,2,715);
+     }*/
+    overallTimer++;
+  }
+}
+
+class MainMenuViewController extends ViewController {
+  void draw() {
+  }
+}
+
 class Rectangle {
   float x1, y1, x2, y2;
   Rectangle(float tx1, float ty1, float tx2, float ty2) {
@@ -133,16 +577,15 @@ class Node {
     vy *= airFriction;
     y += vy;
     x += vx;
-    float acc = dist(vx,vy,pvx,pvy);
+    float acc = dist(vx, vy, pvx, pvy);
     totalNodeNausea += acc*acc*nauseaUnit;
     pvx = vx;
     pvy = vy;
-    
   }
   void applyGravity() {
     vy += gravity;
   }
-  void pressAgainstGround(float groundY){
+  void pressAgainstGround(float groundY) {
     float dif = y-(groundY-m/2);
     pressure += dif*pressureUnit;
     y = (groundY-m/2);
@@ -166,12 +609,12 @@ class Node {
     if (dif >= 0 && haveGround) {
       pressAgainstGround(0);
     }
-    if(y > prevY && hazelStairs >= 0){
+    if (y > prevY && hazelStairs >= 0) {
       float bottomPointNow = y+m/2;
       float bottomPointPrev = prevY+m/2;
       int levelNow = (int)(ceil(bottomPointNow/hazelStairs));
       int levelPrev = (int)(ceil(bottomPointPrev/hazelStairs));
-      if(levelNow > levelPrev){
+      if (levelNow > levelPrev) {
         float groundLevel = levelPrev*hazelStairs;
         pressAgainstGround(groundLevel);
       }
@@ -189,10 +632,10 @@ class Node {
           if (d1 < d2 && d1 < d3 && d1 < d4) {
             px = r.x1;
             py = y;
-          }else if (d2 < d3 && d2 < d4) {
+          } else if (d2 < d3 && d2 < d4) {
             px = r.x2;
             py = y;
-          }else if (d3 < d4) {
+          } else if (d3 < d4) {
             px = x;
             py = r.y1;
           } else {
@@ -203,16 +646,16 @@ class Node {
         } else {
           if (x < r.x1) {
             px = r.x1;
-          }else if (x < r.x2) {
+          } else if (x < r.x2) {
             px = x;
-          }else {
+          } else {
             px = r.x2;
           }
           if (y < r.y1) {
             py = r.y1;
-          }else if (y < r.y2) {
+          } else if (y < r.y2) {
             py = y;
-          }else {
+          } else {
             py = r.y2;
           }
         }
@@ -243,35 +686,35 @@ class Node {
     prevY = y;
     prevX = x;
   }
-  void doMath(int i, ArrayList<Node> n){
+  void doMath(int i, ArrayList<Node> n) {
     float axonValue1 = n.get(axon1).value;
     float axonValue2 = n.get(axon2).value;
-    if(operation == 0){ // constant
-    }else if(operation == 1){ // time
+    if (operation == 0) { // constant
+    } else if (operation == 1) { // time
       valueToBe = simulationTimer/60.0;
-    }else if(operation == 2){ // x - coordinate
+    } else if (operation == 2) { // x - coordinate
       valueToBe = x*0.2;
-    }else if(operation == 3){ // y - coordinate
+    } else if (operation == 3) { // y - coordinate
       valueToBe = -y*0.2;
-    }else if(operation == 4){ // plus
+    } else if (operation == 4) { // plus
       valueToBe = axonValue1+axonValue2;
-    }else if(operation == 5){ // minus
+    } else if (operation == 5) { // minus
       valueToBe = axonValue1-axonValue2;
-    }else if(operation == 6){ // times
+    } else if (operation == 6) { // times
       valueToBe = axonValue1*axonValue2;
-    }else if(operation == 7){ // divide
+    } else if (operation == 7) { // divide
       valueToBe = axonValue1/axonValue2;
-    }else if(operation == 8){ // modulus
+    } else if (operation == 8) { // modulus
       valueToBe = axonValue1%axonValue2;
-    }else if(operation == 9){ // sin
+    } else if (operation == 9) { // sin
       valueToBe = sin(axonValue1);
-    }else if(operation == 10){ // sig
-      valueToBe = 1/(1+pow(2.71828182846,-axonValue1));
-    }else if(operation == 11){ // pressure
+    } else if (operation == 10) { // sig
+      valueToBe = 1/(1+pow(2.71828182846, -axonValue1));
+    } else if (operation == 11) { // pressure
       valueToBe = pressure;
     }
   }
-  void realizeMathValues(int i){
+  void realizeMathValues(int i) {
     value = valueToBe;
   }
   Node copyNode() {
@@ -283,29 +726,29 @@ class Node {
     float newM = m+r()*0.1*mutability;
     newM = min(max(newM, 0.3), 0.5);
     newM = 0.4;
-    
+
     float newV = value*(1+r()*0.2*mutability);
     int newOperation = operation;
     int newAxon1 = axon1;
     int newAxon2 = axon2;
-    if(random(0,1)<bigMutationChance*mutability){
-      newOperation = int(random(0,operationCount));
+    if (random(0, 1)<bigMutationChance*mutability) {
+      newOperation = int(random(0, operationCount));
     }
-    if(random(0,1)<bigMutationChance*mutability){
-      newAxon1 = int(random(0,nodeNum));
+    if (random(0, 1)<bigMutationChance*mutability) {
+      newAxon1 = int(random(0, nodeNum));
     }
-    if(random(0,1)<bigMutationChance*mutability){
-      newAxon2 = int(random(0,nodeNum));
+    if (random(0, 1)<bigMutationChance*mutability) {
+      newAxon2 = int(random(0, nodeNum));
     }
-    
-    if(newOperation == 1){ // time
+
+    if (newOperation == 1) { // time
       newV = 0;
-    }else if(newOperation == 2){ // x - coordinate
+    } else if (newOperation == 2) { // x - coordinate
       newV = newX*0.2;
-    }else if(newOperation == 3){ // y - coordinate
+    } else if (newOperation == 3) { // y - coordinate
       newV = -newY*0.2;
     }
-    
+
     Node newNode = new Node(newX, newY, 0, 0, newM, min(max(f+r()*0.1*mutability, 0), 1), newV, newOperation, newAxon1, newAxon2);
     return newNode;//max(m+r()*0.1,0.2),min(max(f+r()*0.1,0),1)
   }
@@ -324,10 +767,10 @@ class Muscle {
   }
   void applyForce(int i, ArrayList<Node> n) {
     float target = previousTarget;
-    if(energyDirection == 1 || energy >= 0.0001){
-      if(axon >= 0 && axon < n.size()){
+    if (energyDirection == 1 || energy >= 0.0001) {
+      if (axon >= 0 && axon < n.size()) {
         target = len*toMuscleUsable(n.get(axon).value);
-      }else{
+      } else {
         target = len;
       }
     }
@@ -340,7 +783,7 @@ class Muscle {
     ni1.vy += sin(angle)*force*rigidity/ni1.m;
     ni2.vx -= cos(angle)*force*rigidity/ni2.m;
     ni2.vy -= sin(angle)*force*rigidity/ni2.m;
-    energy = max(energy+energyDirection*abs(previousTarget-target)*rigidity*energyUnit,0);
+    energy = max(energy+energyDirection*abs(previousTarget-target)*rigidity*energyUnit, 0);
     previousTarget = target;
   }
   Muscle copyMuscle() {
@@ -350,25 +793,25 @@ class Muscle {
     int newc1 = c1;
     int newc2 = c2;
     int newAxon = axon;
-    if(random(0,1)<bigMutationChance*mutability){
-      newc1 = int(random(0,nodeNum));
+    if (random(0, 1)<bigMutationChance*mutability) {
+      newc1 = int(random(0, nodeNum));
     }
-    if(random(0,1)<bigMutationChance*mutability){
-      newc2 = int(random(0,nodeNum));
+    if (random(0, 1)<bigMutationChance*mutability) {
+      newc2 = int(random(0, nodeNum));
     }
-    if(random(0,1)<bigMutationChance*mutability){
+    if (random(0, 1)<bigMutationChance*mutability) {
       newAxon = getNewMuscleAxon(nodeNum);
     }
-    float newR = min(max(rigidity*(1+r()*0.9*mutability),0.01),0.08);
-    float newLen = min(max(len+r()*mutability,0.4),1.25);
+    float newR = min(max(rigidity*(1+r()*0.9*mutability), 0.01), 0.08);
+    float newLen = min(max(len+r()*mutability, 0.4), 1.25);
 
     return new Muscle(newAxon, newc1, newc2, newLen, newR);
   }
 }
-int getNewMuscleAxon(int nodeNum){
-  if(random(0,1) < 0.5){
-    return int(random(0,nodeNum));
-  }else{
+int getNewMuscleAxon(int nodeNum) {
+  if (random(0, 1) < 0.5) {
+    return int(random(0, nodeNum));
+  } else {
     return -1;
   }
 }
@@ -380,7 +823,7 @@ class Creature {
   boolean alive;
   float creatureTimer;
   float mutability;
-  
+
   Creature(int tid, ArrayList<Node> tn, ArrayList<Muscle> tm, float td, boolean talive, float tct, float tmut) {
     id = tid;
     m = tm;
@@ -392,9 +835,9 @@ class Creature {
   }
   Creature modified(int id) {
     Creature modifiedCreature = new Creature(id, 
-    new ArrayList<Node>(0), new ArrayList<Muscle>(0), 0, true, creatureTimer+r()*16*mutability, min(mutability*random(0.8, 1.25), 2));
+      new ArrayList<Node>(0), new ArrayList<Muscle>(0), 0, true, creatureTimer+r()*16*mutability, min(mutability*random(0.8, 1.25), 2));
     for (int i = 0; i < n.size(); i++) {
-      modifiedCreature.n.add(n.get(i).modifyNode(mutability,n.size()));
+      modifiedCreature.n.add(n.get(i).modifyNode(mutability, n.size()));
     }
     for (int i = 0; i < m.size(); i++) {
       modifiedCreature.m.add(m.get(i).modifyMuscle(n.size(), mutability));
@@ -422,11 +865,9 @@ class Creature {
       for (int j = i+1; j < m.size(); j++) {
         if (m.get(i).c1 == m.get(j).c1 && m.get(i).c2 == m.get(j).c2) {
           bads.add(i);
-        }
-        else if (m.get(i).c1 == m.get(j).c2 && m.get(i).c2 == m.get(j).c1) {
+        } else if (m.get(i).c1 == m.get(j).c2 && m.get(i).c2 == m.get(j).c1) {
           bads.add(i);
-        }
-        else if (m.get(i).c1 == m.get(i).c2) {
+        } else if (m.get(i).c1 == m.get(i).c2) {
           bads.add(i);
         }
       }
@@ -459,52 +900,52 @@ class Creature {
       }
     }
   }
-  void checkForBadAxons(){
+  void checkForBadAxons() {
     for (int i = 0; i < n.size(); i++) {
       Node ni = n.get(i);
-      if(ni.axon1 >= n.size()){
-        ni.axon1 = int(random(0,n.size()));
+      if (ni.axon1 >= n.size()) {
+        ni.axon1 = int(random(0, n.size()));
       }
-      if(ni.axon2 >= n.size()){
-        ni.axon2 = int(random(0,n.size()));
+      if (ni.axon2 >= n.size()) {
+        ni.axon2 = int(random(0, n.size()));
       }
     }
     for (int i = 0; i < m.size(); i++) {
       Muscle mi = m.get(i);
-      if(mi.axon >= n.size()){
+      if (mi.axon >= n.size()) {
         mi.axon = getNewMuscleAxon(n.size());
       }
     }
-    
+
     for (int i = 0; i < n.size(); i++) {
       Node ni = n.get(i);
       ni.safeInput = (operationAxons[ni.operation] == 0);
     }
     int iterations = 0;
     boolean didSomething = false;
-    
-    while(iterations < 1000){
+
+    while (iterations < 1000) {
       didSomething = false;
       for (int i = 0; i < n.size(); i++) {
         Node ni = n.get(i);
-        if(!ni.safeInput){
-          if((operationAxons[ni.operation] == 1 && n.get(ni.axon1).safeInput) ||
-          (operationAxons[ni.operation] == 2 && n.get(ni.axon1).safeInput && n.get(ni.axon2).safeInput)){
+        if (!ni.safeInput) {
+          if ((operationAxons[ni.operation] == 1 && n.get(ni.axon1).safeInput) ||
+            (operationAxons[ni.operation] == 2 && n.get(ni.axon1).safeInput && n.get(ni.axon2).safeInput)) {
             ni.safeInput = true;
             didSomething = true;
           }
         }
       }
-      if(!didSomething){
+      if (!didSomething) {
         iterations = 10000;
       }
     }
-    
+
     for (int i = 0; i < n.size(); i++) {
       Node ni = n.get(i);
-      if(!ni.safeInput){ // This node doesn't get its input from a safe place.  CLEANSE IT.
+      if (!ni.safeInput) { // This node doesn't get its input from a safe place.  CLEANSE IT.
         ni.operation = 0;
-        ni.value = random(0,1);
+        ni.value = random(0, 1);
       }
     }
   }
@@ -514,11 +955,11 @@ class Creature {
     float distance = sqrt(random(0, 1));
     float x = n.get(parentNode).x+cos(ang1)*0.5*distance;
     float y = n.get(parentNode).y+sin(ang1)*0.5*distance;
-    
+
     int newNodeCount = n.size()+1;
-    
-    n.add(new Node(x, y, 0, 0, 0.4, random(0, 1), random(0,1), floor(random(0,operationCount)),
-    floor(random(0,newNodeCount)),floor(random(0,newNodeCount)))); //random(0.1,1),random(0,1)
+
+    n.add(new Node(x, y, 0, 0, 0.4, random(0, 1), random(0, 1), floor(random(0, operationCount)), 
+      floor(random(0, newNodeCount)), floor(random(0, newNodeCount)))); //random(0.1,1),random(0,1)
     int nextClosestNode = 0;
     float record = 100000;
     for (int i = 0; i < n.size()-1; i++) {
@@ -556,8 +997,7 @@ class Creature {
     while (i < m.size ()) {
       if (m.get(i).c1 == choice || m.get(i).c2 == choice) {
         m.remove(i);
-      }
-      else {
+      } else {
         i++;
       }
     }
@@ -590,7 +1030,7 @@ class Creature {
   }
 }
 void drawGround(int toImage) {
-  int stairDrawStart = max(1,(int)(-averageY/hazelStairs)-10);
+  int stairDrawStart = max(1, (int)(-averageY/hazelStairs)-10);
   if (toImage == 0) {
     noStroke();    
     fill(0, 130, 0);
@@ -599,15 +1039,15 @@ void drawGround(int toImage) {
       Rectangle r = rects.get(i);
       rect(r.x1*scaleToFixBug, r.y1*scaleToFixBug, (r.x2-r.x1)*scaleToFixBug, (r.y2-r.y1)*scaleToFixBug);
     }
-    if(hazelStairs > 0){
-      for(int i = stairDrawStart; i < stairDrawStart+20; i++){
-        fill(255,255,255,128);
-        rect((averageX-20)*scaleToFixBug,-hazelStairs*i*scaleToFixBug,40*scaleToFixBug,hazelStairs*0.3*scaleToFixBug);
-        fill(255,255,255,255);
-        rect((averageX-20)*scaleToFixBug,-hazelStairs*i*scaleToFixBug,40*scaleToFixBug,hazelStairs*0.15*scaleToFixBug);
+    if (hazelStairs > 0) {
+      for (int i = stairDrawStart; i < stairDrawStart+20; i++) {
+        fill(255, 255, 255, 128);
+        rect((averageX-20)*scaleToFixBug, -hazelStairs*i*scaleToFixBug, 40*scaleToFixBug, hazelStairs*0.3*scaleToFixBug);
+        fill(255, 255, 255, 255);
+        rect((averageX-20)*scaleToFixBug, -hazelStairs*i*scaleToFixBug, 40*scaleToFixBug, hazelStairs*0.15*scaleToFixBug);
       }
     }
-  }else if (toImage == 2) {
+  } else if (toImage == 2) {
     popUpImage.noStroke();
     popUpImage.fill(0, 130, 0);
     if (haveGround) popUpImage.rect((camX-camZoom*300.0)*scaleToFixBug, 0*scaleToFixBug, (camZoom*600.0)*scaleToFixBug, (camZoom*600.0)*scaleToFixBug);
@@ -617,12 +1057,12 @@ void drawGround(int toImage) {
       Rectangle r = rects.get(i);
       popUpImage.rect(r.x1*scaleToFixBug, r.y1*scaleToFixBug, (r.x2-r.x1)*scaleToFixBug, (r.y2-r.y1)*scaleToFixBug);
     }
-    if(hazelStairs > 0){
-      for(int i = stairDrawStart; i < stairDrawStart+20; i++){
-        popUpImage.fill(255,255,255,128);
-        popUpImage.rect((averageX-20)*scaleToFixBug,-hazelStairs*i*scaleToFixBug,40*scaleToFixBug,hazelStairs*0.3*scaleToFixBug);
-        popUpImage.fill(255,255,255,255);
-        popUpImage.rect((averageX-20)*scaleToFixBug,-hazelStairs*i*scaleToFixBug,40*scaleToFixBug,hazelStairs*0.15*scaleToFixBug);
+    if (hazelStairs > 0) {
+      for (int i = stairDrawStart; i < stairDrawStart+20; i++) {
+        popUpImage.fill(255, 255, 255, 128);
+        popUpImage.rect((averageX-20)*scaleToFixBug, -hazelStairs*i*scaleToFixBug, 40*scaleToFixBug, hazelStairs*0.3*scaleToFixBug);
+        popUpImage.fill(255, 255, 255, 255);
+        popUpImage.rect((averageX-20)*scaleToFixBug, -hazelStairs*i*scaleToFixBug, 40*scaleToFixBug, hazelStairs*0.15*scaleToFixBug);
       }
     }
   }
@@ -636,85 +1076,85 @@ void drawNode(Node ni, float x, float y, int toImage) {
     fill(c);
     noStroke();
     ellipse((ni.x+x)*scaleToFixBug, (ni.y+y)*scaleToFixBug, ni.m*scaleToFixBug, ni.m*scaleToFixBug);
-    if(ni.f >= 0.5){
+    if (ni.f >= 0.5) {
       fill(255);
-    }else{
+    } else {
       fill(0);
     }
     textAlign(CENTER);
     textFont(font, 0.4*ni.m*scaleToFixBug);
-    text(nf(ni.value,0,2),(ni.x+x)*scaleToFixBug,(ni.y+ni.m*lineY2+y)*scaleToFixBug);
-    text(operationNames[ni.operation],(ni.x+x)*scaleToFixBug,(ni.y+ni.m*lineY1+y)*scaleToFixBug);
+    text(nf(ni.value, 0, 2), (ni.x+x)*scaleToFixBug, (ni.y+ni.m*lineY2+y)*scaleToFixBug);
+    text(operationNames[ni.operation], (ni.x+x)*scaleToFixBug, (ni.y+ni.m*lineY1+y)*scaleToFixBug);
   } else if (toImage == 1) {
     screenImage.fill(c);
     screenImage.noStroke();
     screenImage.ellipse((ni.x+x)*scaleToFixBug, (ni.y+y)*scaleToFixBug, ni.m*scaleToFixBug, ni.m*scaleToFixBug);
-    if(ni.f >= 0.5){
+    if (ni.f >= 0.5) {
       screenImage.fill(255);
-    }else{
+    } else {
       screenImage.fill(0);
     }
     screenImage.textAlign(CENTER);
     screenImage.textFont(font, 0.4*ni.m*scaleToFixBug);
-    screenImage.text(nf(ni.value,0,2),(ni.x+x)*scaleToFixBug,(ni.y+ni.m*lineY2+y)*scaleToFixBug);
-    screenImage.text(operationNames[ni.operation],(ni.x+x)*scaleToFixBug,(ni.y+ni.m*lineY1+y)*scaleToFixBug);
+    screenImage.text(nf(ni.value, 0, 2), (ni.x+x)*scaleToFixBug, (ni.y+ni.m*lineY2+y)*scaleToFixBug);
+    screenImage.text(operationNames[ni.operation], (ni.x+x)*scaleToFixBug, (ni.y+ni.m*lineY1+y)*scaleToFixBug);
   } else if (toImage == 2) {
     popUpImage.fill(c);
     popUpImage.noStroke();
     popUpImage.ellipse((ni.x+x)*scaleToFixBug, (ni.y+y)*scaleToFixBug, ni.m*scaleToFixBug, ni.m*scaleToFixBug);
-    if(ni.f >= 0.5){
+    if (ni.f >= 0.5) {
       popUpImage.fill(255);
-    }else{
+    } else {
       popUpImage.fill(0);
     }
     popUpImage.textAlign(CENTER);
     popUpImage.textFont(font, 0.4*ni.m*scaleToFixBug);
-    popUpImage.text(nf(ni.value,0,2),(ni.x+x)*scaleToFixBug,(ni.y+ni.m*lineY2+y)*scaleToFixBug);
-    popUpImage.text(operationNames[ni.operation],(ni.x+x)*scaleToFixBug,(ni.y+ni.m*lineY1+y)*scaleToFixBug);
+    popUpImage.text(nf(ni.value, 0, 2), (ni.x+x)*scaleToFixBug, (ni.y+ni.m*lineY2+y)*scaleToFixBug);
+    popUpImage.text(operationNames[ni.operation], (ni.x+x)*scaleToFixBug, (ni.y+ni.m*lineY1+y)*scaleToFixBug);
   }
 }
 void drawNodeAxons(ArrayList<Node> n, int i, float x, float y, int toImage) {
   Node ni = n.get(i);
-  if(operationAxons[ni.operation] >= 1){
+  if (operationAxons[ni.operation] >= 1) {
     Node axonSource = n.get(n.get(i).axon1);
     float point1x = ni.x-ni.m*0.3+x;
     float point1y = ni.y-ni.m*0.3+y;
     float point2x = axonSource.x+x;
     float point2y = axonSource.y+axonSource.m*0.5+y;
-    drawSingleAxon(point1x,point1y,point2x,point2y,toImage);
+    drawSingleAxon(point1x, point1y, point2x, point2y, toImage);
   }
-  if(operationAxons[ni.operation] == 2){
+  if (operationAxons[ni.operation] == 2) {
     Node axonSource = n.get(n.get(i).axon2);
     float point1x = ni.x+ni.m*0.3+x;
     float point1y = ni.y-ni.m*0.3+y;
     float point2x = axonSource.x+x;
     float point2y = axonSource.y+axonSource.m*0.5+y;
-    drawSingleAxon(point1x,point1y,point2x,point2y,toImage);
+    drawSingleAxon(point1x, point1y, point2x, point2y, toImage);
   }
 }
-void drawSingleAxon(float x1, float y1, float x2, float y2, int toImage){
+void drawSingleAxon(float x1, float y1, float x2, float y2, int toImage) {
   float arrowHeadSize = 0.1;
-  float angle = atan2(y2-y1,x2-x1);
-  if(toImage == 0){
+  float angle = atan2(y2-y1, x2-x1);
+  if (toImage == 0) {
     stroke(axonColor);
     strokeWeight(0.03*scaleToFixBug);
-    line(x1*scaleToFixBug,y1*scaleToFixBug,x2*scaleToFixBug,y2*scaleToFixBug);
-    line(x1*scaleToFixBug,y1*scaleToFixBug,(x1+cos(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug,(y1+sin(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug);
-    line(x1*scaleToFixBug,y1*scaleToFixBug,(x1+cos(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug,(y1+sin(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug);
+    line(x1*scaleToFixBug, y1*scaleToFixBug, x2*scaleToFixBug, y2*scaleToFixBug);
+    line(x1*scaleToFixBug, y1*scaleToFixBug, (x1+cos(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug, (y1+sin(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug);
+    line(x1*scaleToFixBug, y1*scaleToFixBug, (x1+cos(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug, (y1+sin(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug);
     noStroke();
-  }else if(toImage == 1){
+  } else if (toImage == 1) {
     screenImage.stroke(axonColor);
     screenImage.strokeWeight(0.03*scaleToFixBug);
-    screenImage.line(x1*scaleToFixBug,y1*scaleToFixBug,x2*scaleToFixBug,y2*scaleToFixBug);
-    screenImage.line(x1*scaleToFixBug,y1*scaleToFixBug,(x1+cos(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug,(y1+sin(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug);
-    screenImage.line(x1*scaleToFixBug,y1*scaleToFixBug,(x1+cos(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug,(y1+sin(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug);
+    screenImage.line(x1*scaleToFixBug, y1*scaleToFixBug, x2*scaleToFixBug, y2*scaleToFixBug);
+    screenImage.line(x1*scaleToFixBug, y1*scaleToFixBug, (x1+cos(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug, (y1+sin(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug);
+    screenImage.line(x1*scaleToFixBug, y1*scaleToFixBug, (x1+cos(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug, (y1+sin(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug);
     popUpImage.noStroke();
-  }else if(toImage == 2){
+  } else if (toImage == 2) {
     popUpImage.stroke(axonColor);
     popUpImage.strokeWeight(0.03*scaleToFixBug);
-    popUpImage.line(x1*scaleToFixBug,y1*scaleToFixBug,x2*scaleToFixBug,y2*scaleToFixBug);
-    popUpImage.line(x1*scaleToFixBug,y1*scaleToFixBug,(x1+cos(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug,(y1+sin(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug);
-    popUpImage.line(x1*scaleToFixBug,y1*scaleToFixBug,(x1+cos(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug,(y1+sin(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug);
+    popUpImage.line(x1*scaleToFixBug, y1*scaleToFixBug, x2*scaleToFixBug, y2*scaleToFixBug);
+    popUpImage.line(x1*scaleToFixBug, y1*scaleToFixBug, (x1+cos(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug, (y1+sin(angle+PI*0.25)*arrowHeadSize)*scaleToFixBug);
+    popUpImage.line(x1*scaleToFixBug, y1*scaleToFixBug, (x1+cos(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug, (y1+sin(angle+PI*1.75)*arrowHeadSize)*scaleToFixBug);
     popUpImage.noStroke();
   }
 }
@@ -722,7 +1162,7 @@ void drawMuscle(Muscle mi, ArrayList<Node> n, float x, float y, int toImage) {
   Node ni1 = n.get(mi.c1);
   Node ni2 = n.get(mi.c2);
   float w = 0.15;
-  if(mi.axon >= 0 && mi.axon < n.size()){
+  if (mi.axon >= 0 && mi.axon < n.size()) {
     w = toMuscleUsable(n.get(mi.axon).value)*0.15;
   }
   if (toImage == 0) {
@@ -742,41 +1182,41 @@ void drawMuscle(Muscle mi, ArrayList<Node> n, float x, float y, int toImage) {
 void drawMuscleAxons(Muscle mi, ArrayList<Node> n, float x, float y, int toImage) {
   Node ni1 = n.get(mi.c1);
   Node ni2 = n.get(mi.c2);
-  if(mi.axon >= 0 && mi.axon < n.size()){
+  if (mi.axon >= 0 && mi.axon < n.size()) {
     Node axonSource = n.get(mi.axon);
     float muscleMidX = (ni1.x+ni2.x)*0.5+x;
     float muscleMidY = (ni1.y+ni2.y)*0.5+y;
-    drawSingleAxon(muscleMidX, muscleMidY, axonSource.x+x,axonSource.y+axonSource.m*0.5+y,toImage);
+    drawSingleAxon(muscleMidX, muscleMidY, axonSource.x+x, axonSource.y+axonSource.m*0.5+y, toImage);
     float averageMass = (ni1.m+ni2.m)*0.5;
-    if(toImage == 0){
+    if (toImage == 0) {
       fill(axonColor);
       textAlign(CENTER);
       textFont(font, 0.4*averageMass*scaleToFixBug);
-      text(nf(toMuscleUsable(n.get(mi.axon).value),0,2),muscleMidX*scaleToFixBug,muscleMidY*scaleToFixBug);
-    }else if(toImage == 1){
+      text(nf(toMuscleUsable(n.get(mi.axon).value), 0, 2), muscleMidX*scaleToFixBug, muscleMidY*scaleToFixBug);
+    } else if (toImage == 1) {
       screenImage.fill(axonColor);
       screenImage.textAlign(CENTER);
       screenImage.textFont(font, 0.4*averageMass*scaleToFixBug);
-      screenImage.text(nf(toMuscleUsable(n.get(mi.axon).value),0,2),muscleMidX*scaleToFixBug,muscleMidY*scaleToFixBug);
-    }else if(toImage == 2){
+      screenImage.text(nf(toMuscleUsable(n.get(mi.axon).value), 0, 2), muscleMidX*scaleToFixBug, muscleMidY*scaleToFixBug);
+    } else if (toImage == 2) {
       popUpImage.fill(axonColor);
       popUpImage.textAlign(CENTER);
       popUpImage.textFont(font, 0.4*averageMass*scaleToFixBug);
-      popUpImage.text(nf(toMuscleUsable(n.get(mi.axon).value),0,2),muscleMidX*scaleToFixBug,muscleMidY*scaleToFixBug);
+      popUpImage.text(nf(toMuscleUsable(n.get(mi.axon).value), 0, 2), muscleMidX*scaleToFixBug, muscleMidY*scaleToFixBug);
     }
   }
 }
 
-float toMuscleUsable(float f){
-  return min(max(f,0.5),1.5);
+float toMuscleUsable(float f) {
+  return min(max(f, 0.5), 1.5);
 }
 void drawPosts(int toImage) {
-  int startPostY = min(-8,(int)(averageY/4)*4-4);
+  int startPostY = min(-8, (int)(averageY/4)*4-4);
   if (toImage == 0) {
     noStroke();
     textAlign(CENTER);
     textFont(font, postFontSize*scaleToFixBug); 
-    for(int postY = startPostY; postY <= startPostY+8; postY += 4){
+    for (int postY = startPostY; postY <= startPostY+8; postY += 4) {
       for (int i = (int)(averageX/5-5); i <= (int)(averageX/5+5); i++) {
         fill(255);
         rect((i*5.0-0.1)*scaleToFixBug, (-3.0+postY)*scaleToFixBug, 0.2*scaleToFixBug, 3.0*scaleToFixBug);
@@ -790,7 +1230,7 @@ void drawPosts(int toImage) {
     popUpImage.textAlign(CENTER);
     popUpImage.textFont(font, postFontSize*scaleToFixBug); 
     popUpImage.noStroke();
-    for(int postY = startPostY; postY <= startPostY+8; postY += 4){
+    for (int postY = startPostY; postY <= startPostY+8; postY += 4) {
       for (int i = (int)(averageX/5-5); i <= (int)(averageX/5+5); i++) {
         popUpImage.fill(255);
         popUpImage.rect((i*5-0.1)*scaleToFixBug, (-3.0+postY)*scaleToFixBug, 0.2*scaleToFixBug, 3*scaleToFixBug);
@@ -835,8 +1275,7 @@ void drawGraphImage() {
         if (i-1 == topSpeciesCounts.get(genSelected)) {
           stroke(0);
           strokeWeight(2);
-        }
-        else {
+        } else {
           noStroke();
         }
         fill(255, 255, 255);
@@ -885,7 +1324,7 @@ void drawLines(int x, int y, int graphWidth, int graphHeight) {
   graphImage.fill(150);
   graphImage.textFont(font, 18);
   graphImage.textAlign(RIGHT);
-  for (float i = ceil((worst-(best-worst)/18.0)/unit)*unit; i < best+(best-worst)/18.0;i+=unit) {
+  for (float i = ceil((worst-(best-worst)/18.0)/unit)*unit; i < best+(best-worst)/18.0; i+=unit) {
     float lineY = y-i*meterHeight+zero;
     graphImage.line(x, lineY, graphWidth+x, lineY);
     graphImage.text(showUnit(i, unit)+" "+fitnessUnit, x-5, lineY+4);
@@ -895,29 +1334,25 @@ void drawLines(int x, int y, int graphWidth, int graphHeight) {
     int k;
     if (i == 28) {
       k = 14;
-    }
-    else if (i < 14) {
+    } else if (i < 14) {
       k = i;
-    }
-    else {
+    } else {
       k = i+1;
     }
     if (k == 14) {
       graphImage.stroke(255, 0, 0, 255);
       graphImage.strokeWeight(5);
-    }
-    else {
+    } else {
       stroke(0);
       if (k == 0 || k == 28 || (k >= 10 && k <= 18)) {
         graphImage.strokeWeight(3);
-      }
-      else {
+      } else {
         graphImage.strokeWeight(1);
       }
     }
     for (int j = 0; j < gen; j++) {
       graphImage.line(x+j*genWidth, (-percentile.get(j)[k])*meterHeight+zero+y, 
-      x+(j+1)*genWidth, (-percentile.get(j+1)[k])*meterHeight+zero+y);
+        x+(j+1)*genWidth, (-percentile.get(j+1)[k])*meterHeight+zero+y);
     }
   }
 }
@@ -970,16 +1405,14 @@ float setUnit(float best, float worst) {
 String showUnit(float i, float unit) {
   if (unit < 1) {
     return nf(i, 0, 2)+"";
-  }
-  else {
+  } else {
     return int(i)+"";
   }
 }
 ArrayList<Creature> quickSort(ArrayList<Creature> c) {
   if (c.size() <= 1) {
     return c;
-  }
-  else {
+  } else {
     ArrayList<Creature> less = new ArrayList<Creature>();
     ArrayList<Creature> more = new ArrayList<Creature>();
     ArrayList<Creature> equal = new ArrayList<Creature>();
@@ -989,11 +1422,9 @@ ArrayList<Creature> quickSort(ArrayList<Creature> c) {
       Creature ci = c.get(i);
       if (ci.d == c0.d) {
         equal.add(ci);
-      }
-      else if (ci.d < c0.d) {
+      } else if (ci.d < c0.d) {
         less.add(ci);
-      }
-      else {
+      } else {
         more.add(ci);
       }
     }
@@ -1045,7 +1476,7 @@ void simulate() {
     ni.applyGravity();
     ni.applyForces();
     ni.hitWalls();
-    ni.doMath(i,n);
+    ni.doMath(i, n);
   }
   for (int i = 0; i < n.size(); i++) {
     n.get(i).realizeMathValues(i);
@@ -1079,8 +1510,7 @@ void mouseWheel(MouseEvent event) {
         camZoom = 0.002;
       }
       textFont(font, postFontSize);
-    }
-    else if (delta == 1) {
+    } else if (delta == 1) {
       camZoom *= 1.1;
       if (camZoom > 0.1) {
         camZoom = 0.1;
@@ -1124,9 +1554,9 @@ void setMenu(int m) {
     drawGraph(975, 570);
   }
 }
-String zeros(int n, int zeros){
+String zeros(int n, int zeros) {
   String s = n+"";
-  for(int i = s.length(); i < zeros; i++){
+  for (int i = s.length(); i < zeros; i++) {
     s = "0"+s;
   }
   return s;
@@ -1145,9 +1575,9 @@ void mouseReleased() {
   float mY = mouseY/windowSizeMultiplier;
   if (menu == 0 && abs(mX-windowWidth/2) <= 200 && abs(mY-400) <= 100) {
     setMenu(1);
-  }else if (menu == 1 && gen == -1 && abs(mX-120) <= 100 && abs(mY-300) <= 50) {
+  } else if (menu == 1 && gen == -1 && abs(mX-120) <= 100 && abs(mY-300) <= 50) {
     setMenu(2);
-  }else if (menu == 1 && gen >= 0 && abs(mX-990) <= 230) {
+  } else if (menu == 1 && gen >= 0 && abs(mX-990) <= 230) {
     if (abs(mY-40) <= 20) {
       setMenu(4);
       speed = 1;
@@ -1169,22 +1599,22 @@ void mouseReleased() {
       }
       startASAP();
     }
-  }else if (menu == 3 && abs(mX-1030) <= 130 && abs(mY-684) <= 20) {
+  } else if (menu == 3 && abs(mX-1030) <= 130 && abs(mY-684) <= 20) {
     gen = 0;
     setMenu(1);
   } else if (menu == 7 && abs(mX-1030) <= 130 && abs(mY-684) <= 20) {
     setMenu(8);
-  } else if((menu == 5 || menu == 4) && mY >= windowHeight-40){
-    if(mX < 90){
+  } else if ((menu == 5 || menu == 4) && mY >= windowHeight-40) {
+    if (mX < 90) {
       for (int s = timer; s < 900; s++) {
         simulate();
       }
       timer = 1021;
-    }else if(mX >= 120 && mX < 360){
+    } else if (mX >= 120 && mX < 360) {
       speed *= 2;
-      if(speed == 1024) speed = 900;
-      if(speed >= 1800) speed = 1;
-    }else if(mX >= windowWidth-120){
+      if (speed == 1024) speed = 900;
+      if (speed >= 1800) speed = 1;
+    } else if (mX >= windowWidth-120) {
       for (int s = timer; s < 900; s++) {
         simulate();
       }
@@ -1200,13 +1630,13 @@ void mouseReleased() {
       }
       setMenu(6);
     }
-  } else if(menu == 8 && mX < 90 && mY >= windowHeight-40){
+  } else if (menu == 8 && mX < 90 && mY >= windowHeight-40) {
     timer = 100000;
   } else if (menu == 9 && abs(mX-1030) <= 130 && abs(mY-690) <= 20) {
     setMenu(10);
-  }else if (menu == 11 && abs(mX-1130) <= 80 && abs(mY-690) <= 20) {
+  } else if (menu == 11 && abs(mX-1130) <= 80 && abs(mY-690) <= 20) {
     setMenu(12);
-  }else if (menu == 13 && abs(mX-1130) <= 80 && abs(mY-690) <= 20) {
+  } else if (menu == 13 && abs(mX-1130) <= 80 && abs(mY-690) <= 20) {
     setMenu(1);
   }
 }
@@ -1228,13 +1658,13 @@ void drawScreenImage(int stage) {
     int x = j2%40;
     int y = floor(j2/40);
     if (stage >= 1) y++;
-    drawCreature(cj,x*3+5.5, y*2.5+4, 1);
+    drawCreature(cj, x*3+5.5, y*2.5+4, 1);
   }
   timer = 0;
   screenImage.popMatrix();
   screenImage.pushMatrix();
   screenImage.scale(1.5);
-  
+
   screenImage.textAlign(CENTER);
   screenImage.textFont(font, 24);
   screenImage.fill(100, 100, 200);
@@ -1283,12 +1713,12 @@ void drawpopUpImage() {
   camY += (averageY-camY)*0.1;
   popUpImage.beginDraw();
   popUpImage.smooth();
-  
+
   popUpImage.pushMatrix();
-  popUpImage.translate(225,225);
+  popUpImage.translate(225, 225);
   popUpImage.scale(1.0/camZoom/scaleToFixBug);
-  popUpImage.translate(-camX*scaleToFixBug,-camY*scaleToFixBug);
-  
+  popUpImage.translate(-camX*scaleToFixBug, -camY*scaleToFixBug);
+
   if (simulationTimer < 900) {
     popUpImage.background(120, 200, 255);
   } else {
@@ -1360,8 +1790,7 @@ void drawHistogram(int x, int y, int hw, int hh) {
   for (int i = minBar; i <= maxBar; i += 10) {
     if (i == 0) {
       stroke(0, 0, 255);
-    }
-    else {
+    } else {
       stroke(128);
     }
     float theX = x+(i-minBar)*barW;
@@ -1373,8 +1802,7 @@ void drawHistogram(int x, int y, int hw, int hh) {
     float h = min(barCounts.get(genSelected)[i]*multiplier, hh);
     if (i+minBar == floor(percentile.get(min(genSelected, percentile.size()-1))[14]*histBarsPerMeter)) {
       fill(255, 0, 0);
-    }
-    else {
+    } else {
       fill(0, 0, 0);
     }
     rect(x+i*barW, y+hh-h, barW, h);
@@ -1435,8 +1863,7 @@ void drawStatusWindow(boolean isFirstFrame) {
     int py2 = py-125;
     if (py >= 360) {
       py2 -= 180;
-    }
-    else {
+    } else {
       py2 += 180;
     }
     //py = min(max(py,0),420);
@@ -1445,14 +1872,14 @@ void drawStatusWindow(boolean isFirstFrame) {
     image(popUpImage, px2, py2, 300, 300);
 
     /*fill(255, 255, 255);
-    rect(px2+240, py2+10, 50, 30);
-    rect(px2+10, py2+10, 100, 30);
-    fill(0, 0, 0);
-    textFont(font, 30);
-    textAlign(RIGHT);
-    text(int(simulationTimer/60), px2+285, py2+36);
-    textAlign(LEFT);
-    text(nf(averageX/5.0, 0, 3), px2+15, py2+36);*/
+     rect(px2+240, py2+10, 50, 30);
+     rect(px2+10, py2+10, 100, 30);
+     fill(0, 0, 0);
+     textFont(font, 30);
+     textAlign(RIGHT);
+     text(int(simulationTimer/60), px2+285, py2+36);
+     textAlign(LEFT);
+     text(nf(averageX/5.0, 0, 3), px2+15, py2+36);*/
     drawStats(px2+295, py2, 0.45);
 
     simulate();
@@ -1503,11 +1930,11 @@ void setup() {
   popUpImage.smooth();
   popUpImage.background(220);
   popUpImage.endDraw();
-  
+
   font = loadFont("Helvetica-Bold-96.vlw"); 
   textFont(font, 96);
   textAlign(CENTER);
-  
+
   /*rects.add(new Rectangle(4,-7,9,-3));
    rects.add(new Rectangle(6,-1,10,10));
    rects.add(new Rectangle(9.5,-1.5,13,10));
@@ -1521,7 +1948,7 @@ void setup() {
    rects.add(new Rectangle(33,-5.5,37,10));
    rects.add(new Rectangle(36,-6,40,10));
    rects.add(new Rectangle(39,-6.5,100,10));*/
-   
+
   //rects.add(new Rectangle(-100,-100,100,-2.8));
   //rects.add(new Rectangle(-100,0,100,100));
   //Snaking thing below:
@@ -1535,440 +1962,17 @@ void setup() {
    rects.add(new Rectangle(5.25,-5.25,400,4));
    rects.add(new Rectangle(-400,-5.25,0,4));*/
 }
-void draw() {
-  scale(windowSizeMultiplier);
-  if (menu == 0) {
-    background(255);
-    fill(100, 200, 100);
-    noStroke();
-    rect(windowWidth/2-200, 300, 400, 200);
-    fill(0);
-    text("EVOLUTION!", windowWidth/2, 200);
-    text("START", windowWidth/2, 430);
-  }else if (menu == 1) {
-    noStroke();
-    fill(0);
-    background(255, 200, 130);
-    textFont(font, 32);
-    textAlign(LEFT);
-    textFont(font, 96);
-    text("Generation "+max(genSelected, 0), 20, 100);
-    textFont(font, 28);
-    if (gen == -1) {
-      fill(100, 200, 100);
-      rect(20, 250, 200, 100);
-      fill(0);
-      text("Since there are no creatures yet, create 1000 creatures!", 20, 160);
-      text("They will be randomly created, and also very simple.", 20, 200);
-      text("CREATE", 56, 312);
-    } else {
-      fill(100, 200, 100);
-      rect(760, 20, 460, 40);
-      rect(760, 70, 460, 40);
-      rect(760, 120, 230, 40);
-      if (gensToDo >= 2) {
-        fill(128, 255, 128);
-      } else {
-        fill(70, 140, 70);
-      }
-      rect(990, 120, 230, 40);
-      fill(0);
-      text("Do 1 step-by-step generation.", 770, 50);
-      text("Do 1 quick generation.", 770, 100);
-      text("Do 1 gen ASAP.", 770, 150);
-      text("Do gens ALAP.", 1000, 150);
-      text("Median "+fitnessName, 50, 160);
-      textAlign(CENTER);
-      textAlign(RIGHT);
-      text(float(round(percentile.get(min(genSelected, percentile.size()-1))[14]*1000))/1000+" "+fitnessUnit, 700, 160);
-      drawHistogram(760, 410, 460, 280);
-      drawGraphImage();
-      if(saveFramesPerGeneration && gen > lastImageSaved){
-        saveFrame("imgs//"+zeros(gen,5)+".png");
-        lastImageSaved = gen;
-      }
-    }
-    if (gensToDo >= 1) {
-      gensToDo--;
-      if (gensToDo >= 1) {
-        startASAP();
-      }
-    }
-  }else if (menu == 2) {
-    creatures = 0;
-    background(220, 253, 102);
-    pushMatrix();
-    scale(10.0/scaleToFixBug);
-    for (int y = 0; y < 25; y++) {
-      for (int x = 0; x < 40; x++) {
-        n.clear();
-        m.clear();
-        int nodeNum = int(random(3, 6));
-        int muscleNum = int(random(nodeNum-1, nodeNum*3-6));
-        for (int i = 0; i < nodeNum; i++) {
-          n.add(new Node(random(-1, 1), random(-1, 1), 0, 0, 0.4, random(0, 1), random(0,1), 
-          floor(random(0,operationCount)),floor(random(0,nodeNum)),floor(random(0,nodeNum)))); //replaced all nodes' sizes with 0.4, used to be random(0.1,1), random(0,1)
-        }
-        for (int i = 0; i < muscleNum; i++) {
-          int tc1 = 0;
-          int tc2 = 0;
-          int taxon = getNewMuscleAxon(nodeNum);
-          if (i < nodeNum-1) {
-            tc1 = i;
-            tc2 = i+1;
-          } else {
-            tc1 = int(random(0, nodeNum));
-            tc2 = tc1;
-            while (tc2 == tc1) {
-              tc2 = int(random(0, nodeNum));
-            }
-          }
-          float s = 0.8;
-          if (i >= 10) {
-            s *= 1.414;
-          }
-          float len = random(0.5,1.5);
-          m.add(new Muscle(taxon, tc1, tc2, len, random(0.02, 0.08)));
-        }
-        toStableConfiguration(nodeNum, muscleNum);
-        adjustToCenter(nodeNum);
-        float heartbeat = random(40, 80);
-        c[y*40+x] = new Creature(y*40+x+1, new ArrayList<Node>(n), new ArrayList<Muscle>(m), 0, true, heartbeat, 1.0);
-        drawCreature(c[y*40+x], x*3+5.5, y*2.5+3, 0);
-        c[y*40+x].checkForOverlap();
-        c[y*40+x].checkForLoneNodes();
-        c[y*40+x].checkForBadAxons();
-      }
-    }
-    setMenu(3);
-    popMatrix();
-    noStroke();
-    fill(100, 100, 200);
-    rect(900, 664, 260, 40);
-    fill(0);
-    textAlign(CENTER);
-    textFont(font, 24);
-    text("Here are your 1000 randomly generated creatures!!!", windowWidth/2-200, 690);
-    text("Back", windowWidth-250, 690);
-  }else if (menu == 4) {
-    setGlobalVariables(c[creaturesTested]);
-    camZoom = 0.01;
-    setMenu(5);
-    if (!stepbystepslow) {
-      for (int i = 0; i < 1000; i++) {
-        setGlobalVariables(c[i]);
-        for (int s = 0; s < 900; s++) {
-          simulate();
-        }
-        setAverages();
-        setFitness(i);
-      }
-      setMenu(6);
-    }
-  }
-  if (menu == 5) { //simulate running
-    if (timer <= 900) {
-      background(120, 200, 255);
-      for (int s = 0; s < speed; s++) {
-        if (timer < 900) {
-          simulate();
-        }
-      }
-      setAverages();
-      if (speed < 30) {
-        for (int s = 0; s < speed; s++) {
-          camX += (averageX-camX)*0.06;
-          camY += (averageY-camY)*0.06;
-        }
-      } else {
-        camX = averageX;
-        camY = averageY;
-      }
-      pushMatrix();
-      translate(width/2.0, height/2.0);
-      scale(1.0/camZoom/scaleToFixBug);
-      translate(-camX*scaleToFixBug,-camY*scaleToFixBug);
-      
-      drawPosts(0);
-      drawGround(0);
-      drawCreaturePieces(n, m, 0, 0, 0);
-      drawArrow(averageX);
-      popMatrix();
-      drawStats(windowWidth-10, 0,0.7);
-      drawSkipButton();
-      drawOtherButtons();
-    }
-    if (timer == 900) {
-      if (speed < 30) {
-        noStroke();
-        fill(0, 0, 0, 130);
-        rect(0, 0, windowWidth, windowHeight);
-        fill(0, 0, 0, 255);
-        rect(windowWidth/2-500, 200, 1000, 240);
-        fill(255, 0, 0);
-        textAlign(CENTER);
-        textFont(font, 96);
-        text("Creature's "+fitnessName+":", windowWidth/2, 300);
-        text(nf(averageX*0.2,0,2) + " "+fitnessUnit, windowWidth/2, 400);
-      } else {
-        timer = 1020;
-      }
-      setFitness(creaturesTested);
-    }
-    if (timer >= 1020) {
-      setMenu(4);
-      creaturesTested++;
-      if (creaturesTested == 1000) {
-        setMenu(6);
-      }
-      camX = 0;
-    }
-    if (timer >= 900) {
-      timer += speed;
-    }
-  }
-  if (menu == 6) {
-    //sort
-    c2 = new ArrayList<Creature>(0);
-    for(int i = 0; i < 1000; i++){
-      c2.add(c[i]);
-    }
-    c2 = quickSort(c2);
-    percentile.add(new Float[29]);
-    for (int i = 0; i < 29; i++) {
-      percentile.get(gen+1)[i] = c2.get(p[i]).d;
-    }
-    creatureDatabase.add(c2.get(999).copyCreature(-1));
-    creatureDatabase.add(c2.get(499).copyCreature(-1));
-    creatureDatabase.add(c2.get(0).copyCreature(-1));
 
-    Integer[] beginBar = new Integer[barLen];
-    for (int i = 0; i < barLen; i++) {
-      beginBar[i] = 0;
-    }
-    barCounts.add(beginBar);
-    Integer[] beginSpecies = new Integer[101];
-    for (int i = 0; i < 101; i++) {
-      beginSpecies[i] = 0;
-    }
-    for (int i = 0; i < 1000; i++) {
-      int bar = floor(c2.get(i).d*histBarsPerMeter-minBar);
-      if (bar >= 0 && bar < barLen) {
-        barCounts.get(gen+1)[bar]++;
-      }
-      int species = (c2.get(i).n.size()%10)*10+c2.get(i).m.size()%10;
-      beginSpecies[species]++;
-    }
-    speciesCounts.add(new Integer[101]);
-    speciesCounts.get(gen+1)[0] = 0;
-    int cum = 0;
-    int record = 0;
-    int holder = 0;
-    for (int i = 0; i < 100; i++) {
-      cum += beginSpecies[i];
-      speciesCounts.get(gen+1)[i+1] = cum;
-      if (beginSpecies[i] > record) {
-        record = beginSpecies[i];
-        holder = i;
-      }
-    }
-    topSpeciesCounts.add(holder);
-    if (stepbystep) {
-      drawScreenImage(0);
-      setMenu(7);
-    } else {
-      setMenu(10);
-    }
-  }
-  if (menu == 8) {
-    //cool sorting animation
-    background(220, 253, 102);
-    pushMatrix();
-    scale(10.0/scaleToFixBug);
-    float transition = 0.5-0.5*cos(min(float(timer)/60, PI));
-    for (int j = 0; j < 1000; j++) {
-      Creature cj = c2.get(j);
-      int j2 = cj.id-(gen*1000)-1;
-      int x1 = j2%40;
-      int y1 = floor(j2/40);
-      int x2 = j%40;
-      int y2 = floor(j/40)+1;
-      float x3 = inter(x1, x2, transition);
-      float y3 = inter(y1, y2, transition);
-      drawCreature(cj, x3*3+5.5, y3*2.5+4, 0);
-    }
-    popMatrix();
-    if (stepbystepslow) {
-      timer+=2;
-    }
-    else {
-      timer+=10;
-    }
-    drawSkipButton();
-    if (timer > 60*PI) {
-      drawScreenImage(1);
-      setMenu(9);
-    }
-  }
-  float mX = mouseX/windowSizeMultiplier;;
-  float mY = mouseY/windowSizeMultiplier;;
-  prevStatusWindow = statusWindow;
-  if (abs(menu-9) <= 2 && gensToDo == 0 && !drag) {
-    if (abs(mX-639.5) <= 599.5) {
-      if (menu == 7 && abs(mY-329) <= 312) {
-        statusWindow = creaturesInPosition[floor((mX-40)/30)+floor((mY-17)/25)*40];
-      }
-      else if (menu >= 9 && abs(mY-354) <= 312) {
-        statusWindow = floor((mX-40)/30)+floor((mY-42)/25)*40;
-      }
-      else {
-        statusWindow = -4;
-      }
-    }
-    else {
-      statusWindow = -4;
-    }
-  } else if (menu == 1 && genSelected >= 1 && gensToDo == 0 && !drag) {
-    statusWindow = -4;
-    if (abs(mY-250) <= 70) {
-      if (abs(mX-990) <= 230) {
-        float modX = (mX-760)%160;
-        if (modX < 140) {
-          statusWindow = floor((mX-760)/160)-3;
-        }
-      }
-    }
-  } else {
-    statusWindow = -4;
-  }
-  if (menu == 10) {
-    //Kill!
-    for (int j = 0; j < 500; j++) {
-      float f = float(j)/1000;
-      float rand = (pow(random(-1, 1), 3)+1)/2; //cube function
-      slowDies = (f <= rand);
-      int j2;
-      int j3;
-      if (slowDies) {
-        j2 = j;
-        j3 = 999-j;
-      } else {
-        j2 = 999-j;
-        j3 = j;
-      }
-      Creature cj = c2.get(j2);
-      cj.alive = true;
-      Creature ck = c2.get(j3);
-      ck.alive = false;
-    }
-    if (stepbystep) {
-      drawScreenImage(2);
-      setMenu(11);
-    } else {
-      setMenu(12);
-    }
-  }
-  if (menu == 12) { //Reproduce and mutate
-    justGotBack = true;
-    for (int j = 0; j < 500; j++) {
-      int j2 = j;
-      if (!c2.get(j).alive) j2 = 999-j;
-      Creature cj = c2.get(j2);
-      Creature cj2 = c2.get(999-j2);
-      
-      c2.set(j2, cj.copyCreature(cj.id+1000));        //duplicate
-      
-      c2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
-      n = c2.get(999-j2).n;
-      m = c2.get(999-j2).m;
-      toStableConfiguration(n.size(), m.size());
-      adjustToCenter(n.size());
-    }
-    for (int j = 0; j < 1000; j++) {
-      Creature cj = c2.get(j);
-      c[cj.id-(gen*1000)-1001] = cj.copyCreature(-1);
-    }
-    drawScreenImage(3);
-    gen++;
-    if (stepbystep) {
-      setMenu(13);
-    } else {
-      setMenu(1);
-    }
-  }
-  if (menu%2 == 1 && abs(menu-10) <= 3) {
-    image(screenImage, 0, 0, 1280, 720);
-  }
-  if (menu == 1 || gensToDo >= 1) {
-    mX = mouseX/windowSizeMultiplier;;
-    mY = mouseY/windowSizeMultiplier;;
-    noStroke();
-    if (gen >= 1) {
-      textAlign(CENTER);
-      if (gen >= 5) {
-        genSelected = round((sliderX-760)*(gen-1)/410)+1;
-      } else {
-        genSelected = round((sliderX-760)*gen/410);
-      }
-      if (drag) sliderX = min(max(sliderX+(mX-25-sliderX)*0.2, 760), 1170);
-      fill(100);
-      rect(760, 340, 460, 50);
-      fill(220);
-      rect(sliderX, 340, 50, 50);
-      int fs = 0;
-      if (genSelected >= 1) {
-        fs = floor(log(genSelected)/log(10));
-      }
-      fontSize = fontSizes[fs];
-      textFont(font, fontSize);
-      fill(0);
-      text(genSelected, sliderX+25, 366+fontSize*0.3333);
-    }
-    if (genSelected >= 1) {
-      textAlign(CENTER);
-      for (int k = 0; k < 3; k++) {
-        fill(220);
-        rect(760+k*160, 180, 140, 140);
-        pushMatrix();
-        translate(830+160*k, 290);
-        scale(60.0/scaleToFixBug);
-        drawCreature(creatureDatabase.get((genSelected-1)*3+k),0,0,0);
-        popMatrix();
-      }
-      fill(0);
-      textFont(font, 16);
-      text("Worst Creature", 830, 310);
-      text("Median Creature", 990, 310);
-      text("Best Creature", 1150, 310);
-    }
-    if (justGotBack) justGotBack = false;
-  }
-  if (statusWindow >= -3) {
-    drawStatusWindow(prevStatusWindow == -4);
-    if (statusWindow >= -3 && !miniSimulation) {
-      openMiniSimulation();
-    }
-  }
-  /*if(menu >= 1){
-   fill(255);
-   rect(0,705,100,15);
-   fill(0);
-   textAlign(LEFT);
-   textFont(font,12);
-   int g = gensToDo;
-   if(gensToDo >= 10000){
-   g = 1000000000-gensToDo;
-   }
-   text(g,2,715);
-   }*/
-  overallTimer++;
+void draw() {
+  rootViewController.draw();
 }
-void drawStats(float x, float y, float size){
+
+void drawStats(float x, float y, float size) {
   textAlign(RIGHT);
   textFont(font, 32);
   fill(0);
   pushMatrix();
-  translate(x,y);
+  translate(x, y);
   scale(size);
   text("Creature ID: "+id, 0, 32);
   if (speed > 60) {
@@ -1976,40 +1980,40 @@ void drawStats(float x, float y, float size){
   } else {
     timeShow = (timer/60);
   }
-  text("Time: "+nf(timeShow,0,2)+" / 15 sec.", 0, 64);
-  text("Playback Speed: x"+max(1,speed), 0, 96);
+  text("Time: "+nf(timeShow, 0, 2)+" / 15 sec.", 0, 64);
+  text("Playback Speed: x"+max(1, speed), 0, 96);
   String extraWord = "used";
-  if(energyDirection == -1){
+  if (energyDirection == -1) {
     extraWord = "left";
   }
-  text("X: "+nf(averageX/5.0,0,2)+"", 0, 128);
-  text("Y: "+nf(-averageY/5.0,0,2)+"", 0, 160);
-  text("Energy "+extraWord+": "+nf(energy,0,2)+" yums", 0, 192);
-  text("A.N.Nausea: "+nf(averageNodeNausea,0,2)+" blehs", 0, 224);
-  
+  text("X: "+nf(averageX/5.0, 0, 2)+"", 0, 128);
+  text("Y: "+nf(-averageY/5.0, 0, 2)+"", 0, 160);
+  text("Energy "+extraWord+": "+nf(energy, 0, 2)+" yums", 0, 192);
+  text("A.N.Nausea: "+nf(averageNodeNausea, 0, 2)+" blehs", 0, 224);
+
   popMatrix();
 }
-void drawSkipButton(){
+void drawSkipButton() {
   fill(0);
-  rect(0,windowHeight-40,90,40);
+  rect(0, windowHeight-40, 90, 40);
   fill(255);
   textAlign(CENTER);
   textFont(font, 32);
-  text("SKIP",45,windowHeight-8);
+  text("SKIP", 45, windowHeight-8);
 }
-void drawOtherButtons(){
+void drawOtherButtons() {
   fill(0);
-  rect(120,windowHeight-40,240,40);
+  rect(120, windowHeight-40, 240, 40);
   fill(255);
   textAlign(CENTER);
   textFont(font, 32);
-  text("PB speed: x"+speed,240,windowHeight-8);
+  text("PB speed: x"+speed, 240, windowHeight-8);
   fill(0);
-  rect(windowWidth-120,windowHeight-40,120,40);
+  rect(windowWidth-120, windowHeight-40, 120, 40);
   fill(255);
   textAlign(CENTER);
   textFont(font, 32);
-  text("FINISH",windowWidth-60,windowHeight-8);
+  text("FINISH", windowWidth-60, windowHeight-8);
 }
 void setGlobalVariables(Creature thisCreature) {
   n.clear();
@@ -2031,6 +2035,6 @@ void setGlobalVariables(Creature thisCreature) {
   totalNodeNausea = 0;
   averageNodeNausea = 0;
 }
-void setFitness(int i){
+void setFitness(int i) {
   c[i].d = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
 }
