@@ -1466,11 +1466,12 @@ void drawStatusWindow(boolean isFirstFrame) {
     }
   }
 }
+
 void setup() {
+  size(1280, 720);
   frameRate(60);
   randomSeed(SEED);
   noSmooth();
-  size((int)(windowWidth*windowSizeMultiplier), (int)(windowHeight*windowSizeMultiplier));
   ellipseMode(CENTER);
   Float[] beginPercentile = new Float[29];
   Integer[] beginBar = new Integer[barLen];
