@@ -57,59 +57,10 @@ class RootViewController extends ViewController {
       statusWindow = -4;
     }
     if (menu == 10) {
-      //Kill!
-      for (int j = 0; j < 500; j++) {
-        float f = float(j)/1000;
-        float rand = (pow(random(-1, 1), 3)+1)/2; //cube function
-        slowDies = (f <= rand);
-        int j2;
-        int j3;
-        if (slowDies) {
-          j2 = j;
-          j3 = 999-j;
-        } else {
-          j2 = 999-j;
-          j3 = j;
-        }
-        Creature cj = c2.get(j2);
-        cj.alive = true;
-        Creature ck = c2.get(j3);
-        ck.alive = false;
-      }
-      if (stepbystep) {
-        drawScreenImage(2);
-        setMenu(11);
-      } else {
-        setMenu(12);
-      }
+      new Menu10ViewController().draw();
     }
-    if (menu == 12) { //Reproduce and mutate
-      justGotBack = true;
-      for (int j = 0; j < 500; j++) {
-        int j2 = j;
-        if (!c2.get(j).alive) j2 = 999-j;
-        Creature cj = c2.get(j2);
-        Creature cj2 = c2.get(999-j2);
-
-        c2.set(j2, cj.copyCreature(cj.id+1000));        //duplicate
-
-        c2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
-        n = c2.get(999-j2).n;
-        m = c2.get(999-j2).m;
-        toStableConfiguration(n.size(), m.size());
-        adjustToCenter(n.size());
-      }
-      for (int j = 0; j < 1000; j++) {
-        Creature cj = c2.get(j);
-        c[cj.id-(gen*1000)-1001] = cj.copyCreature(-1);
-      }
-      drawScreenImage(3);
-      gen++;
-      if (stepbystep) {
-        setMenu(13);
-      } else {
-        setMenu(1);
-      }
+    if (menu == 12) {
+      new Menu12ViewController().draw();
     }
     if (menu%2 == 1 && abs(menu-10) <= 3) {
       image(screenImage, 0, 0, 1280, 720);
@@ -182,6 +133,7 @@ class RootViewController extends ViewController {
   }
 }
 
+// Menu 0
 class IntroViewController extends ViewController {
   void draw() {
     background(255);
@@ -194,6 +146,7 @@ class IntroViewController extends ViewController {
   }
 }
 
+// Menu 1
 class MainViewController extends ViewController {
   void draw() {
     noStroke();
@@ -474,6 +427,67 @@ class Menu8ViewController extends ViewController {
     if (timer > 60*PI) {
       drawScreenImage(1);
       setMenu(9);
+    }
+  }
+}
+
+class Menu10ViewController extends ViewController {
+  void draw() {
+    //Kill!
+    for (int j = 0; j < 500; j++) {
+      float f = float(j)/1000;
+      float rand = (pow(random(-1, 1), 3)+1)/2; //cube function
+      slowDies = (f <= rand);
+      int j2;
+      int j3;
+      if (slowDies) {
+        j2 = j;
+        j3 = 999-j;
+      } else {
+        j2 = 999-j;
+        j3 = j;
+      }
+      Creature cj = c2.get(j2);
+      cj.alive = true;
+      Creature ck = c2.get(j3);
+      ck.alive = false;
+    }
+    if (stepbystep) {
+      drawScreenImage(2);
+      setMenu(11);
+    } else {
+      setMenu(12);
+    }
+  }
+}
+
+class Menu12ViewController extends ViewController {
+  void draw() { //Reproduce and mutate
+    justGotBack = true;
+    for (int j = 0; j < 500; j++) {
+      int j2 = j;
+      if (!c2.get(j).alive) j2 = 999-j;
+      Creature cj = c2.get(j2);
+      Creature cj2 = c2.get(999-j2);
+
+      c2.set(j2, cj.copyCreature(cj.id+1000));        //duplicate
+
+      c2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
+      n = c2.get(999-j2).n;
+      m = c2.get(999-j2).m;
+      toStableConfiguration(n.size(), m.size());
+      adjustToCenter(n.size());
+    }
+    for (int j = 0; j < 1000; j++) {
+      Creature cj = c2.get(j);
+      c[cj.id-(gen*1000)-1001] = cj.copyCreature(-1);
+    }
+    drawScreenImage(3);
+    gen++;
+    if (stepbystep) {
+      setMenu(13);
+    } else {
+      setMenu(1);
     }
   }
 }
