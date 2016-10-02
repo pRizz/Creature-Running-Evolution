@@ -1,6 +1,4 @@
 
-
-
 void draw() {
   rootViewController.draw();
 }
