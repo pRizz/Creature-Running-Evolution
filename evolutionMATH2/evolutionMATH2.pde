@@ -978,7 +978,7 @@ void drawStatusWindow(boolean isFirstFrame) {
 }
 
 void setup() {
-  size(1280, 720);
+  size(1280, 720, P2D);
   frameRate(60);
   noSmooth();
   ellipseMode(CENTER);
