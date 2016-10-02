@@ -537,14 +537,14 @@ ArrayList<Creature> quickSort(ArrayList<Creature> c) {
 void toStableConfiguration(int nodeNum, int muscleNum) {
   for (int j = 0; j < 200; j++) {
     for (int i = 0; i < muscleNum; i++) {
-      m.get(i).applyForce(i, n);
+      m.get(i).applyForce(i, nodes);
     }
     for (int i = 0; i < nodeNum; i++) {
-      n.get(i).applyForces();
+      nodes.get(i).applyForces();
     }
   }
   for (int i = 0; i < nodeNum; i++) {
-    Node ni = n.get(i);
+    Node ni = nodes.get(i);
     ni.vx = 0;
     ni.vy = 0;
   }
@@ -554,7 +554,7 @@ void adjustToCenter(int nodeNum) {
   float avx = 0;
   float lowY = -1000;
   for (int i = 0; i < nodeNum; i++) {
-    Node ni = n.get(i);
+    Node ni = nodes.get(i);
     avx += ni.x;
     if (ni.y+ni.m/2 > lowY) {
       lowY = ni.y+ni.m/2;
@@ -562,7 +562,7 @@ void adjustToCenter(int nodeNum) {
   }
   avx /= nodeNum;
   for (int i = 0; i < nodeNum; i++) {
-    Node ni = n.get(i);
+    Node ni = nodes.get(i);
     ni.x -= avx;
     ni.y -= lowY;
   }
@@ -570,19 +570,19 @@ void adjustToCenter(int nodeNum) {
 
 void simulate() {
   for (int i = 0; i < m.size(); i++) {
-    m.get(i).applyForce(i, n);
+    m.get(i).applyForce(i, nodes);
   }
-  for (int i = 0; i < n.size(); i++) {
-    Node ni = n.get(i);
+  for (int i = 0; i < nodes.size(); i++) {
+    Node ni = nodes.get(i);
     ni.applyGravity();
     ni.applyForces();
     ni.hitWalls();
-    ni.doMath(i, n);
+    ni.doMath(i, nodes);
   }
-  for (int i = 0; i < n.size(); i++) {
-    n.get(i).realizeMathValues(i);
+  for (int i = 0; i < nodes.size(); i++) {
+    nodes.get(i).realizeMathValues(i);
   }
-  averageNodeNausea = totalNodeNausea/n.size();
+  averageNodeNausea = totalNodeNausea/nodes.size();
   simulationTimer++;
   timer++;
 }
@@ -590,16 +590,16 @@ void simulate() {
 void setAverages() {
   averageX = 0;
   averageY = 0;
-  for (int i = 0; i < n.size(); i++) {
-    Node ni = n.get(i);
+  for (int i = 0; i < nodes.size(); i++) {
+    Node ni = nodes.get(i);
     averageX += ni.x;
     averageY += ni.y;
   }
-  averageX = averageX/n.size();
-  averageY = averageY/n.size();
+  averageX = averageX/nodes.size();
+  averageY = averageY/nodes.size();
 }
 
-ArrayList<Node> n = new ArrayList<Node>();
+ArrayList<Node> nodes = new ArrayList<Node>();
 ArrayList<Muscle> m = new ArrayList<Muscle>();
 Creature[] c = new Creature[1000];
 ArrayList<Creature> c2 = new ArrayList<Creature>();
@@ -732,7 +732,7 @@ void drawpopUpImage() {
   }
   drawPosts(2);
   drawGround(2);
-  drawCreaturePieces(n, m, 0, 0, 2);
+  drawCreaturePieces(nodes, m, 0, 0, 2);
   popUpImage.noStroke();
   popUpImage.endDraw();
   popUpImage.popMatrix();
@@ -956,10 +956,10 @@ void drawOtherButtons() {
 }
 
 void setGlobalVariables(Creature thisCreature) {
-  n.clear();
+  nodes.clear();
   m.clear();
   for (int i = 0; i < thisCreature.n.size(); i++) {
-    n.add(thisCreature.n.get(i).copyNode());
+    nodes.add(thisCreature.n.get(i).copyNode());
   }
   for (int i = 0; i < thisCreature.m.size(); i++) {
     m.add(thisCreature.m.get(i).copyMuscle());
