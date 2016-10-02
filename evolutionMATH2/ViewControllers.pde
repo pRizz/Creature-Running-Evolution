@@ -26,17 +26,14 @@ class RootViewController extends ViewController {
     if (menu == 8) {
       new Menu8ViewController().draw();
     }
-    float mX = mouseX/windowSizeMultiplier;
-    ;
-    float mY = mouseY/windowSizeMultiplier;
-    ;
+    
     prevStatusWindow = statusWindow;
     if (abs(menu-9) <= 2 && gensToDo == 0 && !drag) {
-      if (abs(mX-639.5) <= 599.5) {
-        if (menu == 7 && abs(mY-329) <= 312) {
-          statusWindow = creaturesInPosition[floor((mX-40)/30)+floor((mY-17)/25)*40];
-        } else if (menu >= 9 && abs(mY-354) <= 312) {
-          statusWindow = floor((mX-40)/30)+floor((mY-42)/25)*40;
+      if (abs(actualMouseX()-639.5) <= 599.5) {
+        if (menu == 7 && abs(actualMouseY()-329) <= 312) {
+          statusWindow = creaturesInPosition[floor((actualMouseX()-40)/30)+floor((actualMouseY()-17)/25)*40];
+        } else if (menu >= 9 && abs(actualMouseY()-354) <= 312) {
+          statusWindow = floor((actualMouseX()-40)/30)+floor((actualMouseY()-42)/25)*40;
         } else {
           statusWindow = -4;
         }
@@ -45,11 +42,11 @@ class RootViewController extends ViewController {
       }
     } else if (menu == 1 && genSelected >= 1 && gensToDo == 0 && !drag) {
       statusWindow = -4;
-      if (abs(mY-250) <= 70) {
-        if (abs(mX-990) <= 230) {
-          float modX = (mX-760)%160;
+      if (abs(actualMouseY()-250) <= 70) {
+        if (abs(actualMouseX()-990) <= 230) {
+          float modX = (actualMouseX()-760)%160;
           if (modX < 140) {
-            statusWindow = floor((mX-760)/160)-3;
+            statusWindow = floor((actualMouseX()-760)/160)-3;
           }
         }
       }
@@ -66,10 +63,6 @@ class RootViewController extends ViewController {
       image(screenImage, 0, 0, 1280, 720);
     }
     if (menu == 1 || gensToDo >= 1) {
-      mX = mouseX/windowSizeMultiplier;
-      ;
-      mY = mouseY/windowSizeMultiplier;
-      ;
       noStroke();
       if (gen >= 1) {
         textAlign(CENTER);
@@ -78,7 +71,7 @@ class RootViewController extends ViewController {
         } else {
           genSelected = round((sliderX-760)*gen/410);
         }
-        if (drag) sliderX = min(max(sliderX+(mX-25-sliderX)*0.2, 760), 1170);
+        if (drag) sliderX = min(max(sliderX+(actualMouseX()-25-sliderX)*0.2, 760), 1170);
         fill(100);
         rect(760, 340, 460, 50);
         fill(220);

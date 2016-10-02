@@ -220,3 +220,11 @@ void setGlobalVariables(Creature thisCreature) {
 void setFitness(int i) {
   creatures[i].d = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
 }
+
+float actualMouseX() {
+  return mouseX/windowSizeMultiplier;
+}
+
+float actualMouseY() {
+  return mouseY/windowSizeMultiplier;
+}
