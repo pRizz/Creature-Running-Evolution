@@ -142,7 +142,7 @@ class Node {
     prevY = y;
     prevX = x;
   }
-  void doMath(int i, ArrayList<Node> n) {
+  void doMath(ArrayList<Node> n) {
     float axonValue1 = n.get(axon1).value;
     float axonValue2 = n.get(axon2).value;
     if (operation == 0) { // constant
@@ -170,7 +170,7 @@ class Node {
       valueToBe = pressure;
     }
   }
-  void realizeMathValues(int i) {
+  void realizeMathValues() {
     value = valueToBe;
   }
   Node copyNode() {
@@ -221,7 +221,7 @@ class Muscle {
     c2 = tc2;
     rigidity = trigidity;
   }
-  void applyForce(int i, ArrayList<Node> n) {
+  void applyForce(ArrayList<Node> n) {
     float target = previousTarget;
     if (energyDirection == 1 || energy >= 0.0001) {
       if (axon >= 0 && axon < n.size()) {

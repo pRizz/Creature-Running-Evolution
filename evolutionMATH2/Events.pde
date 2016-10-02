@@ -88,7 +88,7 @@ void mouseReleased() {
       timer = 0;
       creaturesTested++;
       for (int i = creaturesTested; i < 1000; i++) {
-        setGlobalVariables(c[i]);
+        setGlobalVariables(creatures[i]);
         for (int s = 0; s < 900; s++) {
           simulate();
         }

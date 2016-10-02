@@ -59,7 +59,6 @@ float sliderX = 1170;
 int genSelected = 0;
 boolean drag = false;
 boolean justGotBack = false;
-int creatures = 0;
 int creaturesTested = 0;
 int fontSize = 0;
 int[] fontSizes = {
@@ -133,8 +132,6 @@ void drawGround(int toImage) {
     popUpImage.noStroke();
     popUpImage.fill(0, 130, 0);
     if (haveGround) popUpImage.rect((camX-camZoom*300.0)*scaleToFixBug, 0*scaleToFixBug, (camZoom*600.0)*scaleToFixBug, (camZoom*600.0)*scaleToFixBug);
-    float ww = 450;
-    float wh = 450;
     for (int i = 0; i < rects.size(); i++) {
       Rectangle r = rects.get(i);
       popUpImage.rect(r.x1*scaleToFixBug, r.y1*scaleToFixBug, (r.x2-r.x1)*scaleToFixBug, (r.y2-r.y1)*scaleToFixBug);
@@ -462,7 +459,6 @@ void drawSegBars(int x, int y, int graphWidth, int graphHeight) {
     int i2 = min(i+gensPerBar, gen);
     float barX1 = x+i*genWidth;
     float barX2 = x+i2*genWidth;
-    int cum = 0;
     for (int j = 0; j < 100; j++) {
       segBarImage.fill(getColor(j, false));
       segBarImage.beginShape();
@@ -537,7 +533,7 @@ ArrayList<Creature> quickSort(ArrayList<Creature> c) {
 void toStableConfiguration(int nodeNum, int muscleNum) {
   for (int j = 0; j < 200; j++) {
     for (int i = 0; i < muscleNum; i++) {
-      muscles.get(i).applyForce(i, nodes);
+      muscles.get(i).applyForce(nodes);
     }
     for (int i = 0; i < nodeNum; i++) {
       nodes.get(i).applyForces();
@@ -570,17 +566,17 @@ void adjustToCenter(int nodeNum) {
 
 void simulate() {
   for (int i = 0; i < muscles.size(); i++) {
-    muscles.get(i).applyForce(i, nodes);
+    muscles.get(i).applyForce(nodes);
   }
   for (int i = 0; i < nodes.size(); i++) {
     Node ni = nodes.get(i);
     ni.applyGravity();
     ni.applyForces();
     ni.hitWalls();
-    ni.doMath(i, nodes);
+    ni.doMath(nodes);
   }
   for (int i = 0; i < nodes.size(); i++) {
-    nodes.get(i).realizeMathValues(i);
+    nodes.get(i).realizeMathValues();
   }
   averageNodeNausea = totalNodeNausea/nodes.size();
   simulationTimer++;
@@ -601,8 +597,8 @@ void setAverages() {
 
 ArrayList<Node> nodes = new ArrayList<Node>();
 ArrayList<Muscle> muscles = new ArrayList<Muscle>();
-Creature[] c = new Creature[1000];
-ArrayList<Creature> c2 = new ArrayList<Creature>();
+Creature[] creatures = new Creature[1000]; // TODO: rename these creatures variables; figure out their intent
+ArrayList<Creature> creatures2 = new ArrayList<Creature>(); // TODO: rename these creatures variables; figure out their intent
 
 void openMiniSimulation() {
   simulationTimer = 0;
@@ -615,7 +611,7 @@ void openMiniSimulation() {
       id = cj.id;
     } else {
       id = statusWindow;
-      cj = c2.get(id);
+      cj = creatures2.get(id);
     }
     setGlobalVariables(cj);
     creatureWatching = id;
@@ -653,8 +649,8 @@ void drawScreenImage(int stage) {
   screenImage.background(220, 253, 102);
   screenImage.noStroke();
   for (int j = 0; j < 1000; j++) {
-    Creature cj = c2.get(j);
-    if (stage == 3) cj = c[cj.id-(gen*1000)-1001];
+    Creature cj = creatures2.get(j);
+    if (stage == 3) cj = creatures[cj.id-(gen*1000)-1001];
     int j2 = j;
     if (stage == 0) {
       j2 = cj.id-(gen*1000)-1;
@@ -692,7 +688,7 @@ void drawScreenImage(int stage) {
     screenImage.text("Because of random chance, a few fast ones get eaten, while a few slow ones survive.", windowWidth/2-130, 700);
     screenImage.text("Reproduce", windowWidth-150, 700);
     for (int j = 0; j < 1000; j++) {
-      Creature cj = c2.get(j);
+      Creature cj = creatures2.get(j);
       int x = j%40;
       int y = floor(j/40)+1;
       if (cj.alive) {
@@ -826,7 +822,7 @@ void drawStatusWindow(boolean isFirstFrame) {
   strokeWeight(3);
   noFill();
   if (statusWindow >= 0) {
-    cj = c2.get(statusWindow);
+    cj = creatures2.get(statusWindow);
     if (menu == 7) {
       int id = ((cj.id-1)%1000);
       x = id%40;
@@ -977,7 +973,7 @@ void setGlobalVariables(Creature thisCreature) {
 }
 
 void setFitness(int i) {
-  c[i].d = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
+  creatures[i].d = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
 }
 
 void setup() {

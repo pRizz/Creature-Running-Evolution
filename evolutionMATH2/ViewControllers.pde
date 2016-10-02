@@ -202,7 +202,6 @@ class MainViewController extends ViewController {
 
 class Menu2ViewController extends ViewController {
   void draw() {
-    creatures = 0;
     background(220, 253, 102);
     pushMatrix();
     scale(10.0/scaleToFixBug);
@@ -230,21 +229,17 @@ class Menu2ViewController extends ViewController {
               tc2 = int(random(0, nodeNum));
             }
           }
-          float s = 0.8;
-          if (i >= 10) {
-            s *= 1.414;
-          }
           float len = random(0.5, 1.5);
           muscles.add(new Muscle(taxon, tc1, tc2, len, random(0.02, 0.08)));
         }
         toStableConfiguration(nodeNum, muscleNum);
         adjustToCenter(nodeNum);
         float heartbeat = random(40, 80);
-        c[y*40+x] = new Creature(y*40+x+1, new ArrayList<Node>(nodes), new ArrayList<Muscle>(muscles), 0, true, heartbeat, 1.0);
-        drawCreature(c[y*40+x], x*3+5.5, y*2.5+3, 0);
-        c[y*40+x].checkForOverlap();
-        c[y*40+x].checkForLoneNodes();
-        c[y*40+x].checkForBadAxons();
+        creatures[y*40+x] = new Creature(y*40+x+1, new ArrayList<Node>(nodes), new ArrayList<Muscle>(muscles), 0, true, heartbeat, 1.0);
+        drawCreature(creatures[y*40+x], x*3+5.5, y*2.5+3, 0);
+        creatures[y*40+x].checkForOverlap();
+        creatures[y*40+x].checkForLoneNodes();
+        creatures[y*40+x].checkForBadAxons();
       }
     }
     setMenu(3);
@@ -262,12 +257,12 @@ class Menu2ViewController extends ViewController {
 
 class Menu4ViewController extends ViewController {
   void draw() {
-    setGlobalVariables(c[creaturesTested]);
+    setGlobalVariables(creatures[creaturesTested]);
     camZoom = 0.01;
     setMenu(5);
     if (!stepbystepslow) {
       for (int i = 0; i < 1000; i++) {
-        setGlobalVariables(c[i]);
+        setGlobalVariables(creatures[i]);
         for (int s = 0; s < 900; s++) {
           simulate();
         }
@@ -346,18 +341,18 @@ class Menu5ViewController extends ViewController {
 class Menu6ViewController extends ViewController {
   void draw() {
     //sort
-    c2 = new ArrayList<Creature>(0);
+    creatures2 = new ArrayList<Creature>(0);
     for (int i = 0; i < 1000; i++) {
-      c2.add(c[i]);
+      creatures2.add(creatures[i]);
     }
-    c2 = quickSort(c2);
+    creatures2 = quickSort(creatures2);
     percentile.add(new Float[29]);
     for (int i = 0; i < 29; i++) {
-      percentile.get(gen+1)[i] = c2.get(p[i]).d;
+      percentile.get(gen+1)[i] = creatures2.get(p[i]).d;
     }
-    creatureDatabase.add(c2.get(999).copyCreature(-1));
-    creatureDatabase.add(c2.get(499).copyCreature(-1));
-    creatureDatabase.add(c2.get(0).copyCreature(-1));
+    creatureDatabase.add(creatures2.get(999).copyCreature(-1));
+    creatureDatabase.add(creatures2.get(499).copyCreature(-1));
+    creatureDatabase.add(creatures2.get(0).copyCreature(-1));
 
     Integer[] beginBar = new Integer[barLen];
     for (int i = 0; i < barLen; i++) {
@@ -369,11 +364,11 @@ class Menu6ViewController extends ViewController {
       beginSpecies[i] = 0;
     }
     for (int i = 0; i < 1000; i++) {
-      int bar = floor(c2.get(i).d*histBarsPerMeter-minBar);
+      int bar = floor(creatures2.get(i).d*histBarsPerMeter-minBar);
       if (bar >= 0 && bar < barLen) {
         barCounts.get(gen+1)[bar]++;
       }
-      int species = (c2.get(i).n.size()%10)*10+c2.get(i).m.size()%10;
+      int species = (creatures2.get(i).n.size()%10)*10+creatures2.get(i).m.size()%10;
       beginSpecies[species]++;
     }
     speciesCounts.add(new Integer[101]);
@@ -407,7 +402,7 @@ class Menu8ViewController extends ViewController {
     scale(10.0/scaleToFixBug);
     float transition = 0.5-0.5*cos(min(float(timer)/60, PI));
     for (int j = 0; j < 1000; j++) {
-      Creature cj = c2.get(j);
+      Creature cj = creatures2.get(j);
       int j2 = cj.id-(gen*1000)-1;
       int x1 = j2%40;
       int y1 = floor(j2/40);
@@ -447,9 +442,9 @@ class Menu10ViewController extends ViewController {
         j2 = 999-j;
         j3 = j;
       }
-      Creature cj = c2.get(j2);
+      Creature cj = creatures2.get(j2);
       cj.alive = true;
-      Creature ck = c2.get(j3);
+      Creature ck = creatures2.get(j3);
       ck.alive = false;
     }
     if (stepbystep) {
@@ -466,21 +461,21 @@ class Menu12ViewController extends ViewController {
     justGotBack = true;
     for (int j = 0; j < 500; j++) {
       int j2 = j;
-      if (!c2.get(j).alive) j2 = 999-j;
-      Creature cj = c2.get(j2);
-      Creature cj2 = c2.get(999-j2);
+      if (!creatures2.get(j).alive) j2 = 999-j;
+      Creature cj = creatures2.get(j2);
+      Creature cj2 = creatures2.get(999-j2);
 
-      c2.set(j2, cj.copyCreature(cj.id+1000));        //duplicate
+      creatures2.set(j2, cj.copyCreature(cj.id+1000));        //duplicate
 
-      c2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
-      nodes = c2.get(999-j2).n;
-      muscles = c2.get(999-j2).m;
+      creatures2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
+      nodes = creatures2.get(999-j2).n;
+      muscles = creatures2.get(999-j2).m;
       toStableConfiguration(nodes.size(), muscles.size());
       adjustToCenter(nodes.size());
     }
     for (int j = 0; j < 1000; j++) {
-      Creature cj = c2.get(j);
-      c[cj.id-(gen*1000)-1001] = cj.copyCreature(-1);
+      Creature cj = creatures2.get(j);
+      creatures[cj.id-(gen*1000)-1001] = cj.copyCreature(-1);
     }
     drawScreenImage(3);
     gen++;
