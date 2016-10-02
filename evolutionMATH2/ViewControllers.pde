@@ -209,7 +209,7 @@ class Menu2ViewController extends ViewController {
     for (int y = 0; y < 25; y++) {
       for (int x = 0; x < 40; x++) {
         nodes.clear();
-        m.clear();
+        muscles.clear();
         int nodeNum = int(random(3, 6));
         int muscleNum = int(random(nodeNum-1, nodeNum*3-6));
         for (int i = 0; i < nodeNum; i++) {
@@ -235,12 +235,12 @@ class Menu2ViewController extends ViewController {
             s *= 1.414;
           }
           float len = random(0.5, 1.5);
-          m.add(new Muscle(taxon, tc1, tc2, len, random(0.02, 0.08)));
+          muscles.add(new Muscle(taxon, tc1, tc2, len, random(0.02, 0.08)));
         }
         toStableConfiguration(nodeNum, muscleNum);
         adjustToCenter(nodeNum);
         float heartbeat = random(40, 80);
-        c[y*40+x] = new Creature(y*40+x+1, new ArrayList<Node>(nodes), new ArrayList<Muscle>(m), 0, true, heartbeat, 1.0);
+        c[y*40+x] = new Creature(y*40+x+1, new ArrayList<Node>(nodes), new ArrayList<Muscle>(muscles), 0, true, heartbeat, 1.0);
         drawCreature(c[y*40+x], x*3+5.5, y*2.5+3, 0);
         c[y*40+x].checkForOverlap();
         c[y*40+x].checkForLoneNodes();
@@ -305,7 +305,7 @@ class Menu5ViewController extends ViewController {
 
       drawPosts(0);
       drawGround(0);
-      drawCreaturePieces(nodes, m, 0, 0, 0);
+      drawCreaturePieces(nodes, muscles, 0, 0, 0);
       drawArrow(averageX);
       popMatrix();
       drawStats(windowWidth-10, 0, 0.7);
@@ -474,8 +474,8 @@ class Menu12ViewController extends ViewController {
 
       c2.set(999-j2, cj.modified(cj2.id+1000));   //mutated offspring 1
       nodes = c2.get(999-j2).n;
-      m = c2.get(999-j2).m;
-      toStableConfiguration(nodes.size(), m.size());
+      muscles = c2.get(999-j2).m;
+      toStableConfiguration(nodes.size(), muscles.size());
       adjustToCenter(nodes.size());
     }
     for (int j = 0; j < 1000; j++) {

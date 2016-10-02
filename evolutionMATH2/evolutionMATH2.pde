@@ -537,7 +537,7 @@ ArrayList<Creature> quickSort(ArrayList<Creature> c) {
 void toStableConfiguration(int nodeNum, int muscleNum) {
   for (int j = 0; j < 200; j++) {
     for (int i = 0; i < muscleNum; i++) {
-      m.get(i).applyForce(i, nodes);
+      muscles.get(i).applyForce(i, nodes);
     }
     for (int i = 0; i < nodeNum; i++) {
       nodes.get(i).applyForces();
@@ -569,8 +569,8 @@ void adjustToCenter(int nodeNum) {
 }
 
 void simulate() {
-  for (int i = 0; i < m.size(); i++) {
-    m.get(i).applyForce(i, nodes);
+  for (int i = 0; i < muscles.size(); i++) {
+    muscles.get(i).applyForce(i, nodes);
   }
   for (int i = 0; i < nodes.size(); i++) {
     Node ni = nodes.get(i);
@@ -600,7 +600,7 @@ void setAverages() {
 }
 
 ArrayList<Node> nodes = new ArrayList<Node>();
-ArrayList<Muscle> m = new ArrayList<Muscle>();
+ArrayList<Muscle> muscles = new ArrayList<Muscle>();
 Creature[] c = new Creature[1000];
 ArrayList<Creature> c2 = new ArrayList<Creature>();
 
@@ -732,7 +732,7 @@ void drawpopUpImage() {
   }
   drawPosts(2);
   drawGround(2);
-  drawCreaturePieces(nodes, m, 0, 0, 2);
+  drawCreaturePieces(nodes, muscles, 0, 0, 2);
   popUpImage.noStroke();
   popUpImage.endDraw();
   popUpImage.popMatrix();
@@ -957,12 +957,12 @@ void drawOtherButtons() {
 
 void setGlobalVariables(Creature thisCreature) {
   nodes.clear();
-  m.clear();
+  muscles.clear();
   for (int i = 0; i < thisCreature.n.size(); i++) {
     nodes.add(thisCreature.n.get(i).copyNode());
   }
   for (int i = 0; i < thisCreature.m.size(); i++) {
-    m.add(thisCreature.m.get(i).copyMuscle());
+    muscles.add(thisCreature.m.get(i).copyMuscle());
   }
   id = thisCreature.id;
   timer = 0;
