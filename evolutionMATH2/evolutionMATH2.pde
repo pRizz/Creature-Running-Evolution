@@ -980,7 +980,6 @@ void drawStatusWindow(boolean isFirstFrame) {
 void setup() {
   size(1280, 720);
   frameRate(60);
-  randomSeed(SEED);
   noSmooth();
   ellipseMode(CENTER);
   Float[] beginPercentile = new Float[29];
