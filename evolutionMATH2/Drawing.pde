@@ -232,36 +232,37 @@ void drawArrow(float x) {
 void drawGraphImage() {
   image(graphImage, 50, 180, 650, 380);
   image(segBarImage, 50, 580, 650, 100);
-  if (gen >= 1) {
-    stroke(0, 160, 0, 255);
-    strokeWeight(3);
-    float genWidth = 590.0/gen;
-    float lineX = 110+genSelected*genWidth;
-    line(lineX, 180, lineX, 500+180);
-    Integer[] s = speciesCounts.get(genSelected);
-    textAlign(LEFT);
-    textFont(font, 12);
-    noStroke();
-    for (int i = 1; i < 101; i++) {
-      int c = s[i]-s[i-1];
-      if (c >= 25) {
-        float y = ((s[i]+s[i-1])/2)/1000.0*100+573;
-        if (i-1 == topSpeciesCounts.get(genSelected)) {
-          stroke(0);
-          strokeWeight(2);
-        } else {
-          noStroke();
-        }
-        fill(255, 255, 255);
-        rect(lineX+3, y, 56, 14);
-        colorMode(HSB, 1.0);
-        fill(getColor(i-1, true));
-        text("S"+floor((i-1)/10)+""+((i-1)%10)+": "+c, lineX+5, y+11);
-        colorMode(RGB, 255);
-      }
-    }
-    noStroke();
+  if (gen <= 0) {
+    return;
   }
+  stroke(0, 160, 0, 255);
+  strokeWeight(3);
+  float genWidth = 590.0/gen;
+  float lineX = 110+genSelected*genWidth;
+  line(lineX, 180, lineX, 500+180);
+  Integer[] s = speciesCounts.get(genSelected);
+  textAlign(LEFT);
+  textFont(font, 12);
+  noStroke();
+  for (int i = 1; i < 101; i++) {
+    int c = s[i]-s[i-1];
+    if (c >= 25) {
+      float y = ((s[i]+s[i-1])/2)/1000.0*100+573;
+      if (i-1 == topSpeciesCounts.get(genSelected)) {
+        stroke(0);
+        strokeWeight(2);
+      } else {
+        noStroke();
+      }
+      fill(255, 255, 255);
+      rect(lineX+3, y, 56, 14);
+      colorMode(HSB, 1.0);
+      fill(getColor(i-1, true));
+      text("S"+floor((i-1)/10)+""+((i-1)%10)+": "+c, lineX+5, y+11);
+      colorMode(RGB, 255);
+    }
+  }
+  noStroke();
 }
 
 void drawGraph(int graphWidth, int graphHeight) { 
@@ -440,19 +441,8 @@ void drawpopUpImage() {
   popUpImage.popMatrix();
 }
 
-void drawCreature(Creature cj, float x, float y, int toImage) {
-  for (int i = 0; i < cj.m.size(); i++) {
-    drawMuscle(cj.m.get(i), cj.n, x, y, toImage);
-  }
-  for (int i = 0; i < cj.n.size(); i++) {
-    drawNode(cj.n.get(i), x, y, toImage);
-  }
-  for (int i = 0; i < cj.m.size(); i++) {
-    drawMuscleAxons(cj.m.get(i), cj.n, x, y, toImage);
-  }
-  for (int i = 0; i < cj.n.size(); i++) {
-    drawNodeAxons(cj.n, i, x, y, toImage);
-  }
+void drawCreature(Creature creature, float x, float y, int toImage) {
+  drawCreaturePieces(creature.n, creature.m, x, y, toImage);
 }
 
 void drawCreaturePieces(ArrayList<Node> n, ArrayList<Muscle> m, float x, float y, int toImage) {

@@ -130,20 +130,8 @@ class RootViewController extends ViewController {
         openMiniSimulation();
       }
     }
-    /*if(menu >= 1){
-     fill(255);
-     rect(0,705,100,15);
-     fill(0);
-     textAlign(LEFT);
-     textFont(font,12);
-     int g = gensToDo;
-     if(gensToDo >= 10000){
-     g = 1000000000-gensToDo;
-     }
-     text(g,2,715);
-     }*/
     overallTimer++;
-  }
+  } // end of draw()
 }
 
 // Menu 0
