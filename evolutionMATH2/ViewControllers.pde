@@ -70,11 +70,18 @@ class RootViewController extends ViewController {
     }
 
     prevStatusWindow = statusWindow;
+    // menu (7...11)
     if (abs(menu-9) <= 2 && gensToDo == 0 && !drag) {
+      // mouseX (40...1240)?
       if (abs(actualMouseX()-639.5) <= 599.5) {
+        // mouseY at 329 +- 312 -> (17...641)?
         if (menu == 7 && abs(actualMouseY()-329) <= 312) {
-          statusWindow = creaturesInPosition[floor((actualMouseX()-40)/30)+floor((actualMouseY()-17)/25)*40];
-        } else if (menu >= 9 && abs(actualMouseY()-354) <= 312) {
+          // 40 -> 0, 70 -> 1, etc...
+          int floor1 = floor((actualMouseX()-40)/30);
+          // 17 -> 0, 42 -> 1, etc...
+          int floor2 = floor((actualMouseY()-17)/25);
+          statusWindow = creaturesInPosition[floor1+floor2*40];
+        } else if (menu >= 9 && abs(actualMouseY()-354) <= 312) { // mouseY in 354 +- 312 -> (...)
           statusWindow = floor((actualMouseX()-40)/30)+floor((actualMouseY()-42)/25)*40;
         } else {
           statusWindow = -4;
@@ -219,9 +226,9 @@ class MainViewController extends ViewController {
       }
       if (abs(actualMouseY()-140) <= 20) {
         if (actualMouseX() < 990) {
-          gensToDo = 1;
+          gensToDo = 1; // ASAP button pressed
         } else {
-          gensToDo = 1000000000;
+          gensToDo = 1000000000; // ALAP button pressed
         }
         startASAP();
       }
