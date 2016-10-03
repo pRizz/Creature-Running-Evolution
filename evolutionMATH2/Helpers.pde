@@ -177,7 +177,7 @@ void openMiniSimulation() {
 void setMenu(int m) {
   menu = m;
 
-// TODO: Refactor such that setMenu will be replaced by just rootViewController.presentViewController(...)
+  // TODO: Refactor such that setMenu will be replaced by just rootViewController.presentViewController(...)
   if (menu == 0) {
     rootViewController.presentViewController(new IntroViewController());
   } else if (menu == 1) {
@@ -258,37 +258,31 @@ float actualMouseY() {
 }
 
 int calculateNextStatusWindow() {
-    // menu (7...11)
-    if (abs(menu-9) <= 2 && gensToDo == 0 && !drag) {
-      // mouseX (40...1240)?
-      if (abs(actualMouseX()-639.5) <= 599.5) {
-        // mouseY at 329 +- 312 -> (17...641)?
-        if (menu == 7 && abs(actualMouseY()-329) <= 312) {
-          // 40 -> 0, 70 -> 1, etc...
-          int floor1 = floor((actualMouseX()-40)/30);
-          // 17 -> 0, 42 -> 1, etc...
-          int floor2 = floor((actualMouseY()-17)/25);
-          statusWindow = creaturesInPosition[floor1+floor2*40];
-        } else if (menu >= 9 && abs(actualMouseY()-354) <= 312) { // mouseY in 354 +- 312 -> (...)
-          statusWindow = floor((actualMouseX()-40)/30)+floor((actualMouseY()-42)/25)*40; // buggy?
-        } else {
-          statusWindow = -4;
-        }
-      } else {
-        statusWindow = -4;
-      }
-    } else if (menu == 1 && genSelected >= 1 && gensToDo == 0 && !drag) {
-      statusWindow = -4;
-      if (abs(actualMouseY()-250) <= 70) {
-        if (abs(actualMouseX()-990) <= 230) {
-          float modX = (actualMouseX()-760)%160;
-          if (modX < 140) {
-            statusWindow = floor((actualMouseX()-760)/160)-3;
-          }
-        }
-      }
-    } else {
-      statusWindow = -4;
-    }
+  int statusWindow = -4;
+  if (!(gensToDo == 0 && !drag)) { // guard
     return statusWindow;
+  }
+
+  // mouseY at 329 +- 312 -> (17...641)?
+  if (menu == 7 && abs(actualMouseX()-639.5) <= 599.5 && abs(actualMouseY()-329) <= 312) {
+    // 40 -> 0, 70 -> 1, etc...
+    int floor1 = floor((actualMouseX()-40)/30);
+    // 17 -> 0, 42 -> 1, etc...
+    int floor2 = floor((actualMouseY()-17)/25);
+    statusWindow = creaturesInPosition[floor1+floor2*40];
+  }
+
+  // mouseX (40...1240)?
+  if (menu >= 9 && menu <= 11 && abs(actualMouseX()-639.5) <= 599.5 && abs(actualMouseY()-354) <= 312) { // mouseY in 354 +- 312 -> (...)
+    statusWindow = floor((actualMouseX()-40)/30)+floor((actualMouseY()-42)/25)*40; // buggy?
+  }
+
+  if (menu == 1 && genSelected >= 1 && abs(actualMouseY()-250) <= 70 && abs(actualMouseX()-990) <= 230) {
+    float modX = (actualMouseX()-760)%160;
+    if (modX < 140) {
+      statusWindow = floor((actualMouseX()-760)/160)-3;
+    }
+  }
+  
+  return statusWindow;
 }
