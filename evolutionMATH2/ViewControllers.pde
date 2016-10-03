@@ -15,6 +15,10 @@ RootViewController rootViewController = new RootViewController(); // Singleton
 
 class RootViewController extends ViewController {
   private ViewController presentedViewController = null;
+  
+  RootViewController() {
+    presentViewController(new IntroViewController());
+  }
 
   void presentViewController(ViewController vc) {
     presentedViewController = vc;
@@ -28,6 +32,20 @@ class RootViewController extends ViewController {
       return;
     }
     presentedViewController.mouseWheel(event);
+  }
+
+  void mousePressed() {
+    if (presentedViewController == null) { 
+      return;
+    }
+    presentedViewController.mousePressed();
+  }
+
+  void mouseReleased() {
+    if (presentedViewController == null) { 
+      return;
+    }
+    presentedViewController.mouseReleased();
   }
 
   void draw() {
@@ -152,6 +170,12 @@ class RootViewController extends ViewController {
 
 // Menu 0
 class IntroViewController extends ViewController {
+  void mouseReleased() {
+    if (abs(actualMouseX()-windowWidth/2) <= 200 && abs(actualMouseY()-400) <= 100) {
+      setMenu(1);
+    }
+  }
+
   void draw() {
     background(255);
     fill(100, 200, 100);
@@ -167,6 +191,13 @@ class IntroViewController extends ViewController {
 class MainViewController extends ViewController {
   void viewWillAppear() {
     drawGraph(975, 570);
+  }
+
+  void mousePressed() {
+    // handle the slider
+    if (gen >= 1 && abs(actualMouseY()-365) <= 25 && abs(actualMouseX()-sliderX-25) <= 25) {
+      drag = true;
+    }
   }
 
   void draw() {

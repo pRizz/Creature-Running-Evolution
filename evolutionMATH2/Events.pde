@@ -11,19 +11,14 @@ void mousePressed() {
   if (gensToDo >= 1) {
     gensToDo = 0;
   }
-  float mX = mouseX/windowSizeMultiplier;
-  float mY = mouseY/windowSizeMultiplier;
-  if (menu == 1 && gen >= 1 && abs(mY-365) <= 25 && abs(mX-sliderX-25) <= 25) {
-    drag = true;
-  }
+  rootViewController.mousePressed();
 }
 
 void mouseReleased() {
   drag = false;
   miniSimulation = false;
-  if (menu == 0 && abs(actualMouseX()-windowWidth/2) <= 200 && abs(actualMouseY()-400) <= 100) {
-    setMenu(1);
-  } else if (menu == 1 && gen == -1 && abs(actualMouseX()-120) <= 100 && abs(actualMouseY()-300) <= 50) {
+  rootViewController.mouseReleased();
+  if (menu == 1 && gen == -1 && abs(actualMouseX()-120) <= 100 && abs(actualMouseY()-300) <= 50) {
     setMenu(2);
   } else if (menu == 1 && gen >= 0 && abs(actualMouseX()-990) <= 230) {
     if (abs(actualMouseY()-40) <= 20) {
