@@ -70,9 +70,9 @@ class RootViewController extends ViewController {
     }
 
     prevStatusWindow = statusWindow;
-    
+
     statusWindow = calculateNextStatusWindow();
-    
+
     if (menu == 10) {
       new Menu10ViewController().draw();
     }
@@ -83,46 +83,7 @@ class RootViewController extends ViewController {
       image(screenImage, 0, 0, 1280, 720);
     }
     if (menu == 1 || gensToDo >= 1) {
-      noStroke();
-      if (gen >= 1) {
-        textAlign(CENTER);
-        if (gen >= 5) {
-          genSelected = round((sliderX-760)*(gen-1)/410)+1;
-        } else {
-          genSelected = round((sliderX-760)*gen/410);
-        }
-        if (drag) sliderX = min(max(sliderX+(actualMouseX()-25-sliderX)*0.2, 760), 1170);
-        fill(100);
-        rect(760, 340, 460, 50);
-        fill(220);
-        rect(sliderX, 340, 50, 50);
-        int fs = 0;
-        if (genSelected >= 1) {
-          fs = floor(log(genSelected)/log(10));
-        }
-        fontSize = fontSizes[fs];
-        textFont(font, fontSize);
-        fill(0);
-        text(genSelected, sliderX+25, 366+fontSize*0.3333);
-      }
-      if (genSelected >= 1) {
-        textAlign(CENTER);
-        for (int k = 0; k < 3; k++) {
-          fill(220);
-          rect(760+k*160, 180, 140, 140);
-          pushMatrix();
-          translate(830+160*k, 290);
-          scale(60.0/scaleToFixBug);
-          drawCreature(creatureDatabase.get((genSelected-1)*3+k), 0, 0, 0);
-          popMatrix();
-        }
-        fill(0);
-        textFont(font, 16);
-        text("Worst Creature", 830, 310);
-        text("Median Creature", 990, 310);
-        text("Best Creature", 1150, 310);
-      }
-      if (justGotBack) justGotBack = false;
+      new PostDrawViewController().draw();
     }
     if (statusWindow >= -3) {
       drawStatusWindow(prevStatusWindow == -4);
@@ -134,7 +95,7 @@ class RootViewController extends ViewController {
   } // end of draw()
 }
 
-// Menu 0
+// Menu 0, only draws
 class IntroViewController extends ViewController {
   void mouseReleased() {
     if (abs(actualMouseX()-windowWidth/2) <= 200 && abs(actualMouseY()-400) <= 100) {
@@ -153,7 +114,7 @@ class IntroViewController extends ViewController {
   }
 }
 
-// Menu 1
+// Menu 1, can mutate the menu to 4 in startASAP(), if doing many gens.
 class MainViewController extends ViewController {
   void viewWillAppear() {
     drawGraph(975, 570);
@@ -161,13 +122,14 @@ class MainViewController extends ViewController {
 
   void mousePressed() {
     // handle the slider
+    // TODO: encapsulate the drag variable for this slider.
     if (gen >= 1 && abs(actualMouseY()-365) <= 25 && abs(actualMouseX()-sliderX-25) <= 25) {
       drag = true;
     }
   }
 
   void mouseReleased() {
-    if (gen == -1 && abs(actualMouseX()-120) <= 100 && abs(actualMouseY()-300) <= 50) {
+    if (gen == -1 && abs(actualMouseX()-120) <= 100 && abs(actualMouseY()-300) <= 50) { // Create button
       setMenu(2);
     } else if (gen >= 0 && abs(actualMouseX()-990) <= 230) {
       if (abs(actualMouseY()-40) <= 20) {
@@ -212,15 +174,15 @@ class MainViewController extends ViewController {
       text("CREATE", 56, 312);
     } else {
       fill(100, 200, 100);
-      rect(760, 20, 460, 40);
-      rect(760, 70, 460, 40);
-      rect(760, 120, 230, 40);
+      rect(760, 20, 460, 40); // Step by step button
+      rect(760, 70, 460, 40); // 1 quick generation button
+      rect(760, 120, 230, 40); // 1 asap button
       if (gensToDo >= 2) {
         fill(128, 255, 128);
       } else {
         fill(70, 140, 70);
       }
-      rect(990, 120, 230, 40);
+      rect(990, 120, 230, 40); // do gens alap button
       fill(0);
       text("Do 1 step-by-step generation.", 770, 50);
       text("Do 1 quick generation.", 770, 100);
@@ -246,6 +208,7 @@ class MainViewController extends ViewController {
   }
 }
 
+// The "Here are your 1000 randomly generated creatures!!!" which displays the creatures as small
 class Menu2ViewController extends ViewController {
   void draw() {
     background(220, 253, 102);
@@ -302,6 +265,7 @@ class Menu2ViewController extends ViewController {
 }
 
 // The "Here are your 1000 randomly generated creatures!!!" screen with a back button
+// TODO: Try to merge this with Menu 2
 class Menu3ViewController extends ViewController {
   void mouseReleased() {
     // back button
@@ -315,6 +279,7 @@ class Menu3ViewController extends ViewController {
   }
 }
 
+// Segues to Menu5ViewController, Menu6ViewController
 class Menu4ViewController extends ViewController {
   void mouseReleased() {
     if (actualMouseY() >= windowHeight-40) {
@@ -364,19 +329,21 @@ class Menu4ViewController extends ViewController {
   }
 }
 
+// Shows full screen running simulation for 1 creature
+// Segues to Menu4ViewController, Menu6ViewController
 class Menu5ViewController extends ViewController {
   void mouseReleased() {
     if (actualMouseY() >= windowHeight-40) {
-      if (actualMouseX() < 90) {
+      if (actualMouseX() < 90) { // Skip button?
         for (int s = timer; s < 900; s++) {
           simulate();
         }
         timer = 1021;
-      } else if (actualMouseX() >= 120 && actualMouseX() < 360) {
+      } else if (actualMouseX() >= 120 && actualMouseX() < 360) { // Speed button
         speed *= 2;
         if (speed == 1024) speed = 900;
         if (speed >= 1800) speed = 1;
-      } else if (actualMouseX() >= windowWidth-120) {
+      } else if (actualMouseX() >= windowWidth-120) { // Finish Button?
         for (int s = timer; s < 900; s++) {
           simulate();
         }
@@ -396,6 +363,7 @@ class Menu5ViewController extends ViewController {
   }
 
   void draw() { //simulate running
+    // TODO: Make the timer an instance variable/ non-global
     if (timer <= 900) {
       background(120, 200, 255);
       for (int s = 0; s < speed; s++) {
@@ -475,6 +443,7 @@ class Menu5ViewController extends ViewController {
   }
 }
 
+// Segues to menu 7 and 10
 class Menu6ViewController extends ViewController {
   void draw() {
     //sort
@@ -531,9 +500,10 @@ class Menu6ViewController extends ViewController {
   }
 }
 
+// Segues to menu 8
 class Menu7ViewController extends ViewController {
   void mouseReleased() {
-    if (abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) {
+    if (abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) { // Sort button?
       setMenu(8);
     }
   }
@@ -542,9 +512,11 @@ class Menu7ViewController extends ViewController {
   }
 }
 
+// Performs the creature sort animation
+// Segues to Menu 9
 class Menu8ViewController extends ViewController {
   void mouseReleased() {
-    if (actualMouseX() < 90 && actualMouseY() >= windowHeight-40) {
+    if (actualMouseX() < 90 && actualMouseY() >= windowHeight-40) { // Skip button
       timer = 100000;
     }
   }
@@ -580,6 +552,7 @@ class Menu8ViewController extends ViewController {
   }
 }
 
+// Shows the Kill 500 button?
 class Menu9ViewController extends ViewController {
   void mouseReleased() {
     if (abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-690) <= 20) {
@@ -591,6 +564,7 @@ class Menu9ViewController extends ViewController {
   }
 }
 
+// Segues to menu 11 and 12
 class Menu10ViewController extends ViewController {
   void draw() {
     //Kill!
@@ -623,7 +597,7 @@ class Menu10ViewController extends ViewController {
 
 class Menu11ViewController extends ViewController {
   void mouseReleased() {
-    if (abs(actualMouseX()-1130) <= 80 && abs(actualMouseY()-690) <= 20) {
+    if (abs(actualMouseX()-1130) <= 80 && abs(actualMouseY()-690) <= 20) { // Reproduce button?
       setMenu(12);
     }
   }
@@ -665,11 +639,56 @@ class Menu12ViewController extends ViewController {
 
 class Menu13ViewController extends ViewController {
   void mouseReleased() {
-    if (abs(actualMouseX()-1130) <= 80 && abs(actualMouseY()-690) <= 20) {
+    if (abs(actualMouseX()-1130) <= 80 && abs(actualMouseY()-690) <= 20) { // Back button
       setMenu(1);
     }
   }
 
   void draw() {
+  }
+}
+
+class PostDrawViewController extends ViewController {
+  void draw() {
+    noStroke();
+    if (gen >= 1) {
+      textAlign(CENTER);
+      if (gen >= 5) {
+        genSelected = round((sliderX-760)*(gen-1)/410)+1;
+      } else {
+        genSelected = round((sliderX-760)*gen/410);
+      }
+      if (drag) sliderX = min(max(sliderX+(actualMouseX()-25-sliderX)*0.2, 760), 1170);
+      fill(100);
+      rect(760, 340, 460, 50);
+      fill(220);
+      rect(sliderX, 340, 50, 50);
+      int fs = 0;
+      if (genSelected >= 1) {
+        fs = floor(log(genSelected)/log(10));
+      }
+      fontSize = fontSizes[fs];
+      textFont(font, fontSize);
+      fill(0);
+      text(genSelected, sliderX+25, 366+fontSize*0.3333);
+    }
+    if (genSelected >= 1) {
+      textAlign(CENTER);
+      for (int k = 0; k < 3; k++) {
+        fill(220);
+        rect(760+k*160, 180, 140, 140);
+        pushMatrix();
+        translate(830+160*k, 290);
+        scale(60.0/scaleToFixBug);
+        drawCreature(creatureDatabase.get((genSelected-1)*3+k), 0, 0, 0);
+        popMatrix();
+      }
+      fill(0);
+      textFont(font, 16);
+      text("Worst Creature", 830, 310);
+      text("Median Creature", 990, 310);
+      text("Best Creature", 1150, 310);
+    }
+    if (justGotBack) justGotBack = false;
   }
 }
