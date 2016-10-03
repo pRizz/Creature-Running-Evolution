@@ -1,4 +1,5 @@
 
+
 abstract class ViewController {
   abstract void draw();
   void mouseWheel(MouseEvent event) {
@@ -279,6 +280,9 @@ class Menu3ViewController extends ViewController {
   }
 }
 
+static int fastSimulations = 0;
+static double averageTimeForSimulations = 0.0;
+
 // Segues to Menu5ViewController, Menu6ViewController
 class Menu4ViewController extends ViewController {
   void mouseReleased() {
@@ -316,6 +320,8 @@ class Menu4ViewController extends ViewController {
     camZoom = 0.01;
     setMenu(5);
     if (!stepbystepslow) {
+      println("Starting fast simulation...");
+      Date beforeSimulation = new Date();
       for (int i = 0; i < 1000; i++) {
         setGlobalVariables(creatures[i]);
         for (int s = 0; s < 900; s++) {
@@ -324,6 +330,13 @@ class Menu4ViewController extends ViewController {
         setAverages();
         setFitness(i);
       }
+      Date afterSimulation = new Date();
+      long msForSimulation = afterSimulation.getTime() - beforeSimulation.getTime();
+      println("Simulation took " + msForSimulation + "ms");
+      ++fastSimulations;
+      averageTimeForSimulations = (averageTimeForSimulations * (fastSimulations - 1) + msForSimulation) / fastSimulations;
+      println("Average sim time is " + averageTimeForSimulations + "ms");
+
       setMenu(6);
     }
   }
