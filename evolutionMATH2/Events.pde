@@ -4,22 +4,7 @@ void draw() {
 }
 
 void mouseWheel(MouseEvent event) {
-  float delta = event.getCount();
-  if (menu == 5) {
-    if (delta == -1) {
-      camZoom *= 0.9090909;
-      if (camZoom < 0.002) {
-        camZoom = 0.002;
-      }
-      textFont(font, postFontSize);
-    } else if (delta == 1) {
-      camZoom *= 1.1;
-      if (camZoom > 0.1) {
-        camZoom = 0.1;
-      }
-      textFont(font, postFontSize);
-    }
-  }
+  rootViewController.mouseWheel(event);
 }
 
 void mousePressed() {

@@ -1,11 +1,35 @@
 
 abstract class ViewController {
   abstract void draw();
+  void mouseWheel(MouseEvent event) {
+  }
+  void mousePressed() {
+  }
+  void mouseReleased() {
+  }
+  void viewWillAppear() {
+  }
 }
 
-ViewController rootViewController = new RootViewController(); // Singleton
+RootViewController rootViewController = new RootViewController(); // Singleton
 
 class RootViewController extends ViewController {
+  private ViewController presentedViewController = null;
+
+  void presentViewController(ViewController vc) {
+    presentedViewController = vc;
+    if (presentedViewController != null) { 
+      presentedViewController.viewWillAppear();
+    }
+  }
+
+  void mouseWheel(MouseEvent event) {
+    if (presentedViewController == null) { 
+      return;
+    }
+    presentedViewController.mouseWheel(event);
+  }
+
   void draw() {
     scale(windowSizeMultiplier);
     if (menu == 0) {
@@ -26,7 +50,7 @@ class RootViewController extends ViewController {
     if (menu == 8) {
       new Menu8ViewController().draw();
     }
-    
+
     prevStatusWindow = statusWindow;
     if (abs(menu-9) <= 2 && gensToDo == 0 && !drag) {
       if (abs(actualMouseX()-639.5) <= 599.5) {
@@ -141,6 +165,10 @@ class IntroViewController extends ViewController {
 
 // Menu 1
 class MainViewController extends ViewController {
+  void viewWillAppear() {
+    drawGraph(975, 570);
+  }
+
   void draw() {
     noStroke();
     fill(0);
@@ -327,6 +355,23 @@ class Menu5ViewController extends ViewController {
     }
     if (timer >= 900) {
       timer += speed;
+    }
+  }
+
+  void mouseWheel(MouseEvent event) {
+    float delta = event.getCount();
+    if (delta == -1) {
+      camZoom *= 0.9090909;
+      if (camZoom < 0.002) {
+        camZoom = 0.002;
+      }
+      textFont(font, postFontSize);
+    } else if (delta == 1) {
+      camZoom *= 1.1;
+      if (camZoom > 0.1) {
+        camZoom = 0.1;
+      }
+      textFont(font, postFontSize);
     }
   }
 }

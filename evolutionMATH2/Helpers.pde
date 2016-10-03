@@ -176,14 +176,32 @@ void openMiniSimulation() {
 
 void setMenu(int m) {
   menu = m;
-  if (m == 1) {
-    drawGraph(975, 570);
+
+// TODO: Refactor such that setMenu will be replaced by just rootViewController.presentViewController(...)
+  if (menu == 0) {
+    rootViewController.presentViewController(new IntroViewController());
+  } else if (menu == 1) {
+    rootViewController.presentViewController(new MainViewController());
+  } else if (menu == 2) {
+    rootViewController.presentViewController(new Menu2ViewController());
+  } else if (menu == 4) {
+    rootViewController.presentViewController(new Menu4ViewController());
+  } else if (menu == 5) {
+    rootViewController.presentViewController(new Menu5ViewController());
+  } else if (menu == 6) {
+    rootViewController.presentViewController(new Menu6ViewController());
+  } else if (menu == 8) {
+    rootViewController.presentViewController(new Menu8ViewController());
+  } else if (menu == 10) {
+    rootViewController.presentViewController(new Menu10ViewController());
+  } else if (menu == 12) {
+    rootViewController.presentViewController(new Menu12ViewController());
   }
 }
 
 String zeros(int n, int zeros) {
   String s = n+"";
-  for (int i = s.length(); i < zeros; i++) {
+  for (int i = s.length(); i < zeros; ++i) {
     s = "0"+s;
   }
   return s;

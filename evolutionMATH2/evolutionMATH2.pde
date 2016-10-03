@@ -120,16 +120,16 @@ void setup() {
   speciesCounts.add(beginSpecies);
   topSpeciesCounts.add(0);
 
-  graphImage = createGraphics(975, 570);
+  graphImage = createGraphics(975, 570); //<>//
   screenImage = createGraphics(1920, 1080);
   popUpImage = createGraphics(450, 450);
   segBarImage = createGraphics(975, 150);
-  segBarImage.beginDraw();
   segBarImage.smooth();
+  segBarImage.beginDraw();
   segBarImage.background(220);
   segBarImage.endDraw();
-  popUpImage.beginDraw();
   popUpImage.smooth();
+  popUpImage.beginDraw();
   popUpImage.background(220);
   popUpImage.endDraw();
 

@@ -265,8 +265,8 @@ void drawGraphImage() {
 }
 
 void drawGraph(int graphWidth, int graphHeight) { 
-  graphImage.beginDraw();
   graphImage.smooth();
+  graphImage.beginDraw();
   graphImage.background(220);
   if (gen >= 1) {
     drawLines(90, int(graphHeight*0.05), graphWidth-90, int(graphHeight*0.9));
