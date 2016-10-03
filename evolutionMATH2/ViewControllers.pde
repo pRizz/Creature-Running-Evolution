@@ -15,7 +15,7 @@ RootViewController rootViewController = new RootViewController(); // Singleton
 
 class RootViewController extends ViewController {
   private ViewController presentedViewController = null;
-  
+
   RootViewController() {
     presentViewController(new IntroViewController());
   }
@@ -200,6 +200,34 @@ class MainViewController extends ViewController {
     }
   }
 
+  void mouseReleased() {
+    if (gen == -1 && abs(actualMouseX()-120) <= 100 && abs(actualMouseY()-300) <= 50) {
+      setMenu(2);
+    } else if (gen >= 0 && abs(actualMouseX()-990) <= 230) {
+      if (abs(actualMouseY()-40) <= 20) {
+        setMenu(4);
+        speed = 1;
+        creaturesTested = 0;
+        stepbystep = true;
+        stepbystepslow = true;
+      }
+      if (abs(actualMouseY()-90) <= 20) {
+        setMenu(4);
+        creaturesTested = 0;
+        stepbystep = true;
+        stepbystepslow = false;
+      }
+      if (abs(actualMouseY()-140) <= 20) {
+        if (actualMouseX() < 990) {
+          gensToDo = 1;
+        } else {
+          gensToDo = 1000000000;
+        }
+        startASAP();
+      }
+    }
+  }
+
   void draw() {
     noStroke();
     fill(0);
@@ -304,6 +332,20 @@ class Menu2ViewController extends ViewController {
     textFont(font, 24);
     text("Here are your 1000 randomly generated creatures!!!", windowWidth/2-200, 690);
     text("Back", windowWidth-250, 690);
+  }
+}
+
+// The "Here are your 1000 randomly generated creatures!!!" screen with a back button
+class Menu3ViewController extends ViewController {
+  void mouseReleased() {
+    // back button
+    if (abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) {
+      gen = 0;
+      setMenu(1);
+    }
+  }
+
+  void draw() {
   }
 }
 

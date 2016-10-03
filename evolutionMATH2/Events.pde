@@ -18,34 +18,7 @@ void mouseReleased() {
   drag = false;
   miniSimulation = false;
   rootViewController.mouseReleased();
-  if (menu == 1 && gen == -1 && abs(actualMouseX()-120) <= 100 && abs(actualMouseY()-300) <= 50) {
-    setMenu(2);
-  } else if (menu == 1 && gen >= 0 && abs(actualMouseX()-990) <= 230) {
-    if (abs(actualMouseY()-40) <= 20) {
-      setMenu(4);
-      speed = 1;
-      creaturesTested = 0;
-      stepbystep = true;
-      stepbystepslow = true;
-    }
-    if (abs(actualMouseY()-90) <= 20) {
-      setMenu(4);
-      creaturesTested = 0;
-      stepbystep = true;
-      stepbystepslow = false;
-    }
-    if (abs(actualMouseY()-140) <= 20) {
-      if (actualMouseX() < 990) {
-        gensToDo = 1;
-      } else {
-        gensToDo = 1000000000;
-      }
-      startASAP();
-    }
-  } else if (menu == 3 && abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) {
-    gen = 0;
-    setMenu(1);
-  } else if (menu == 7 && abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) {
+  if (menu == 7 && abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) {
     setMenu(8);
   } else if ((menu == 5 || menu == 4) && actualMouseY() >= windowHeight-40) {
     if (actualMouseX() < 90) {

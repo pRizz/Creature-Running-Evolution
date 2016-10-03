@@ -184,6 +184,8 @@ void setMenu(int m) {
     rootViewController.presentViewController(new MainViewController());
   } else if (menu == 2) {
     rootViewController.presentViewController(new Menu2ViewController());
+  } else if (menu == 3) {
+    rootViewController.presentViewController(new Menu3ViewController());
   } else if (menu == 4) {
     rootViewController.presentViewController(new Menu4ViewController());
   } else if (menu == 5) {
