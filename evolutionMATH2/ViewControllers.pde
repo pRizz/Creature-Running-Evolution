@@ -350,6 +350,36 @@ class Menu3ViewController extends ViewController {
 }
 
 class Menu4ViewController extends ViewController {
+  void mouseReleased() {
+    if (actualMouseY() >= windowHeight-40) {
+      if (actualMouseX() < 90) {
+        for (int s = timer; s < 900; s++) {
+          simulate();
+        }
+        timer = 1021;
+      } else if (actualMouseX() >= 120 && actualMouseX() < 360) {
+        speed *= 2;
+        if (speed == 1024) speed = 900;
+        if (speed >= 1800) speed = 1;
+      } else if (actualMouseX() >= windowWidth-120) {
+        for (int s = timer; s < 900; s++) {
+          simulate();
+        }
+        timer = 0;
+        creaturesTested++;
+        for (int i = creaturesTested; i < 1000; i++) {
+          setGlobalVariables(creatures[i]);
+          for (int s = 0; s < 900; s++) {
+            simulate();
+          }
+          setAverages();
+          setFitness(i);
+        }
+        setMenu(6);
+      }
+    }
+  }
+
   void draw() {
     setGlobalVariables(creatures[creaturesTested]);
     camZoom = 0.01;
@@ -369,6 +399,36 @@ class Menu4ViewController extends ViewController {
 }
 
 class Menu5ViewController extends ViewController {
+  void mouseReleased() {
+    if (actualMouseY() >= windowHeight-40) {
+      if (actualMouseX() < 90) {
+        for (int s = timer; s < 900; s++) {
+          simulate();
+        }
+        timer = 1021;
+      } else if (actualMouseX() >= 120 && actualMouseX() < 360) {
+        speed *= 2;
+        if (speed == 1024) speed = 900;
+        if (speed >= 1800) speed = 1;
+      } else if (actualMouseX() >= windowWidth-120) {
+        for (int s = timer; s < 900; s++) {
+          simulate();
+        }
+        timer = 0;
+        creaturesTested++;
+        for (int i = creaturesTested; i < 1000; i++) {
+          setGlobalVariables(creatures[i]);
+          for (int s = 0; s < 900; s++) {
+            simulate();
+          }
+          setAverages();
+          setFitness(i);
+        }
+        setMenu(6);
+      }
+    }
+  }
+
   void draw() { //simulate running
     if (timer <= 900) {
       background(120, 200, 255);
@@ -505,7 +565,24 @@ class Menu6ViewController extends ViewController {
   }
 }
 
+class Menu7ViewController extends ViewController {
+  void mouseReleased() {
+    if (abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-684) <= 20) {
+      setMenu(8);
+    }
+  }
+
+  void draw() {
+  }
+}
+
 class Menu8ViewController extends ViewController {
+  void mouseReleased() {
+    if (actualMouseX() < 90 && actualMouseY() >= windowHeight-40) {
+      timer = 100000;
+    }
+  }
+
   void draw() {
     //cool sorting animation
     background(220, 253, 102);
@@ -534,6 +611,17 @@ class Menu8ViewController extends ViewController {
       drawScreenImage(1);
       setMenu(9);
     }
+  }
+}
+
+class Menu9ViewController extends ViewController {
+  void mouseReleased() {
+    if (abs(actualMouseX()-1030) <= 130 && abs(actualMouseY()-690) <= 20) {
+      setMenu(10);
+    }
+  }
+
+  void draw() {
   }
 }
 
@@ -567,6 +655,17 @@ class Menu10ViewController extends ViewController {
   }
 }
 
+class Menu11ViewController extends ViewController {
+  void mouseReleased() {
+    if (abs(actualMouseX()-1130) <= 80 && abs(actualMouseY()-690) <= 20) {
+      setMenu(12);
+    }
+  }
+
+  void draw() {
+  }
+}
+
 class Menu12ViewController extends ViewController {
   void draw() { //Reproduce and mutate
     justGotBack = true;
@@ -595,5 +694,16 @@ class Menu12ViewController extends ViewController {
     } else {
       setMenu(1);
     }
+  }
+}
+
+class Menu13ViewController extends ViewController {
+  void mouseReleased() {
+    if (abs(actualMouseX()-1130) <= 80 && abs(actualMouseY()-690) <= 20) {
+      setMenu(1);
+    }
+  }
+
+  void draw() {
   }
 }

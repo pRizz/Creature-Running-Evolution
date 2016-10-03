@@ -192,12 +192,20 @@ void setMenu(int m) {
     rootViewController.presentViewController(new Menu5ViewController());
   } else if (menu == 6) {
     rootViewController.presentViewController(new Menu6ViewController());
+  } else if (menu == 7) {
+    rootViewController.presentViewController(new Menu7ViewController());
   } else if (menu == 8) {
     rootViewController.presentViewController(new Menu8ViewController());
+  } else if (menu == 9) {
+    rootViewController.presentViewController(new Menu9ViewController());
   } else if (menu == 10) {
     rootViewController.presentViewController(new Menu10ViewController());
+  } else if (menu == 11) {
+    rootViewController.presentViewController(new Menu11ViewController());
   } else if (menu == 12) {
     rootViewController.presentViewController(new Menu12ViewController());
+  } else if (menu == 13) {
+    rootViewController.presentViewController(new Menu13ViewController());
   }
 }
 
