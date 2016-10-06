@@ -1,3 +1,4 @@
+import java.util.Date;
 /* OpenProcessing Tweak of *@*http://www.openprocessing.org/sketch/377698*@* */
 /* !do not delete the line above, required for linking your tweak if you upload again */
 final float windowSizeMultiplier = 0.8;
@@ -119,8 +120,8 @@ void setup() {
   barCounts.add(beginBar);
   speciesCounts.add(beginSpecies);
   topSpeciesCounts.add(0);
-
-  graphImage = createGraphics(975, 570); //<>//
+ //<>//
+  graphImage = createGraphics(975, 570);
   screenImage = createGraphics(1920, 1080);
   popUpImage = createGraphics(450, 450);
   segBarImage = createGraphics(975, 150);
