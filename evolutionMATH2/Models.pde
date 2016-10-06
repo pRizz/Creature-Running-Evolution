@@ -83,16 +83,6 @@ class Node {
     if (dif >= 0 && haveGround) {
       pressAgainstGround(0);
     }
-    if (y > prevY && hazelStairs >= 0) {
-      float bottomPointNow = y+m/2;
-      float bottomPointPrev = prevY+m/2;
-      int levelNow = (int)(ceil(bottomPointNow/hazelStairs));
-      int levelPrev = (int)(ceil(bottomPointPrev/hazelStairs));
-      if (levelNow > levelPrev) {
-        float groundLevel = levelPrev*hazelStairs;
-        pressAgainstGround(groundLevel);
-      }
-    }
     for (int i = 0; i < rects.size(); i++) {
       Rectangle r = rects.get(i);
       boolean flip = false;
@@ -160,6 +150,7 @@ class Node {
     prevY = y;
     prevX = x;
   }
+  
   void doMath(ArrayList<Node> n) {
     float axonValue1 = n.get(axon1).value;
     float axonValue2 = n.get(axon2).value;
@@ -188,12 +179,44 @@ class Node {
       valueToBe = pressure;
     }
   }
+  
+  void doMathRefactored(ArrayList<Node> n, int simulationTimer) {
+    float axonValue1 = n.get(axon1).value;
+    float axonValue2 = n.get(axon2).value;
+    if (operation == 0) { // constant
+    } else if (operation == 1) { // time
+      valueToBe = simulationTimer/60.0;
+    } else if (operation == 2) { // x - coordinate
+      valueToBe = x*0.2;
+    } else if (operation == 3) { // y - coordinate
+      valueToBe = -y*0.2;
+    } else if (operation == 4) { // plus
+      valueToBe = axonValue1+axonValue2;
+    } else if (operation == 5) { // minus
+      valueToBe = axonValue1-axonValue2;
+    } else if (operation == 6) { // times
+      valueToBe = axonValue1*axonValue2;
+    } else if (operation == 7) { // divide
+      valueToBe = axonValue1/axonValue2;
+    } else if (operation == 8) { // modulus
+      valueToBe = axonValue1%axonValue2;
+    } else if (operation == 9) { // sin
+      valueToBe = sin(axonValue1);
+    } else if (operation == 10) { // sig
+      valueToBe = 1/(1+pow(2.71828182846, -axonValue1));
+    } else if (operation == 11) { // pressure
+      valueToBe = pressure;
+    }
+  }
+  
   void realizeMathValues() {
     value = valueToBe;
   }
+  
   Node copyNode() {
     return (new Node(x, y, 0, 0, m, f, value, operation, axon1, axon2));
   }
+  
   Node modifyNode(float mutability, int nodeNum) {
     float newX = x+r()*0.5*mutability;
     float newY = y+r()*0.5*mutability;
@@ -253,7 +276,7 @@ class Muscle {
     Node ni2 = n.get(c2);
     float distance = dist(ni1.x, ni1.y, ni2.x, ni2.y);
     float angle = atan2(ni1.y-ni2.y, ni1.x-ni2.x);
-    force = min(max(1-(distance/target), -0.4), 0.4);
+    float force = min(max(1-(distance/target), -0.4), 0.4);
     ni1.vx += cos(angle)*force*rigidity/ni1.m;
     ni1.vy += sin(angle)*force*rigidity/ni1.m;
     ni2.vx -= cos(angle)*force*rigidity/ni2.m;
@@ -492,6 +515,10 @@ class Creature {
     m.remove(choice);
   }
 
+  Creature copyCreature() {
+    return copyCreature(this.id);
+  }
+
   Creature copyCreature(int newID) {
     ArrayList<Node> n2 = copyOfNodes();
     ArrayList<Muscle> m2 = copyOfMuscles();
@@ -545,14 +572,14 @@ class SimulationResult {
   final float averageNodeNausea;
   final int simulationTimer;
   final int timer;
-  final float fitness;
+  //final float fitness;
   final float totalNodeNausea;
 
-  SimulationResult(float averageNodeNausea, int simulationTimer, int timer, float fitness, float totalNodeNausea) {
+  SimulationResult(float averageNodeNausea, int simulationTimer, int timer, float totalNodeNausea) {
     this.averageNodeNausea = averageNodeNausea;
     this.simulationTimer = simulationTimer;
     this.timer = timer;
-    this.fitness = fitness;
+    //this.fitness = fitness;
     this.totalNodeNausea = totalNodeNausea;
   }
 }

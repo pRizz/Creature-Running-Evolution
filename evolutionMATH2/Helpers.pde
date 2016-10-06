@@ -147,36 +147,40 @@ void simulate() {
 }
 
 // FIXME
-SimulationResult simulateRefactored(Creature creature, float totalNodeNausea, int simulationTimer, int timer) {
-  Creature creatureCopy = creature.copyCreature(creature.id);
-  ArrayList<Muscle> muscles = creatureCopy.m;
-  ArrayList<Node> nodes = creatureCopy.n;
+SimulationResult simulateCreatureRefactored(Creature creature, float totalNodeNausea, int simulationTimer, int timer) {
+  ArrayList<Muscle> muscles = creature.m;
+  ArrayList<Node> nodes = creature.n;
   
   for (Muscle muscle : muscles) {
     muscle.applyForce(nodes);
   }
   for (Node node : nodes) {
     node.applyGravity();
-    totalNodeNausea = node.applyForcesRefactored(totalNodeNausea);
+    totalNodeNausea += node.applyForcesRefactored(totalNodeNausea);
     node.hitWalls();
-    node.doMath(nodes);
+    node.doMathRefactored(nodes, simulationTimer);
   }
   for (Node node : nodes) {
     node.realizeMathValues();
   }
-  creature.simulatedFitness = creatureCopy.getFitness();
-  return new SimulationResult(totalNodeNausea/nodes.size(), simulationTimer + 1, timer + 1, creature.getFitness(), totalNodeNausea);
+  return new SimulationResult(totalNodeNausea/nodes.size(), simulationTimer + 1, timer + 1, totalNodeNausea);
 }
 
-List<SimulationResult> simulateCreaturesIn(List<Creature> creatures, int simulationTimer, int timer) {
+List<SimulationResult> simulateCreaturesIn(List<Creature> creatures) {
   List<SimulationResult> simulationResults = new ArrayList<SimulationResult>();
   for (Creature creature : creatures) {
     float totalNodeNausea = 0;
-    for (int s = 0; s < 900; s++) {
-      SimulationResult simResult = simulateRefactored(creature, totalNodeNausea, simulationTimer, timer);
+    int simulationTimer = 0;
+    int timer = 0;
+    Creature creatureCopy = creature.copyCreature();
+    for (int s = 0; s < 900; ++s) {
+      SimulationResult simResult = simulateCreatureRefactored(creatureCopy, totalNodeNausea, simulationTimer, timer);
       totalNodeNausea = simResult.totalNodeNausea;
-      simulationResults.add(simResult);
+      simulationTimer = simResult.simulationTimer;
+      timer = simResult.timer;
+      //simulationResults.add(simResult);
     }
+    creature.simulatedFitness = creatureCopy.getFitness();
   }
   return simulationResults;
 }

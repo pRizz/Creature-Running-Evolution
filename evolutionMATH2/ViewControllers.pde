@@ -315,7 +315,7 @@ class Menu4ViewController extends ViewController {
     }
   }
 
-  void newdraw() {
+  void newDraw() {
     setGlobalVariables(creatures[creaturesTested]);
     camZoom = 0.01;
     setMenu(5);
@@ -323,18 +323,9 @@ class Menu4ViewController extends ViewController {
       println("Starting fast simulation...");
       Date beforeSimulation = new Date();
       for (int i = 0; i < 1000; i++) {
-        setGlobalVariables(creatures[i]);
         List<Creature> creaturesToSimulate = new ArrayList<Creature>();
         creaturesToSimulate.add(creatures[i]);
-        List<SimulationResult> simResults = simulateCreaturesIn(creaturesToSimulate, simulationTimer, timer);
-        for (SimulationResult simResult : simResults) {
-          averageNodeNausea = simResult.averageNodeNausea;
-          simulationTimer = simResult.simulationTimer;
-          timer = simResult.timer;
-        }
-        //setAverages();
-        //setFitness(i);
-        setFitnessRefactored(i, creatures[i].getFitness());
+        List<SimulationResult> simResults = simulateCreaturesIn(creaturesToSimulate);
       }
       Date afterSimulation = new Date();
       long msForSimulation = afterSimulation.getTime() - beforeSimulation.getTime();
@@ -347,7 +338,7 @@ class Menu4ViewController extends ViewController {
     }
   }
 
-  void draw() {
+  void oldDraw() {
     setGlobalVariables(creatures[creaturesTested]);
     camZoom = 0.01;
     setMenu(5);
@@ -355,12 +346,16 @@ class Menu4ViewController extends ViewController {
       println("Starting fast simulation...");
       Date beforeSimulation = new Date();
       for (int i = 0; i < 1000; i++) {
+            println("simulating creature " + creatures[i].id);
+
         setGlobalVariables(creatures[i]);
         for (int s = 0; s < 900; s++) {
           simulate();
         }
         setAverages();
         setFitness(i);
+        println("creature " + i + " fitness: " + creatures[i].simulatedFitness);
+
       }
       Date afterSimulation = new Date();
       long msForSimulation = afterSimulation.getTime() - beforeSimulation.getTime();
@@ -371,6 +366,11 @@ class Menu4ViewController extends ViewController {
 
       setMenu(6);
     }
+  }
+  
+  void draw() {
+    //oldDraw();
+    newDraw();
   }
 }
 

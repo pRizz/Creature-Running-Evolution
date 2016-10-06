@@ -91,7 +91,6 @@ int simulationTimer = 0;
 float camZoom = 0.015;
 
 float target;
-float force;
 float averageX;
 float averageY;
 int speed;
