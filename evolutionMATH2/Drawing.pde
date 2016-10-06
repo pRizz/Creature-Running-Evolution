@@ -323,8 +323,8 @@ void drawLines(int x, int y, int graphWidth, int graphHeight) {
 }
 
 void drawSegBars(int x, int y, int graphWidth, int graphHeight) {
-  segBarImage.beginDraw();
   segBarImage.smooth();
+  segBarImage.beginDraw();
   segBarImage.noStroke();
   segBarImage.colorMode(HSB, 1);
   segBarImage.background(0, 0, 0.5);
@@ -349,10 +349,10 @@ void drawSegBars(int x, int y, int graphWidth, int graphHeight) {
 }
 
 void drawScreenImage(int stage) {
+  screenImage.smooth();
   screenImage.beginDraw();
   screenImage.pushMatrix();
   screenImage.scale(15.0/scaleToFixBug);
-  screenImage.smooth();
   screenImage.background(220, 253, 102);
   screenImage.noStroke();
   for (int j = 0; j < 1000; j++) {
@@ -420,8 +420,8 @@ void drawpopUpImage() {
   setAverages();
   camX += (averageX-camX)*0.1;
   camY += (averageY-camY)*0.1;
-  popUpImage.beginDraw();
   popUpImage.smooth();
+  popUpImage.beginDraw();
 
   popUpImage.pushMatrix();
   popUpImage.translate(225, 225);
