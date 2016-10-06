@@ -320,12 +320,29 @@ class Menu4ViewController extends ViewController {
     camZoom = 0.01;
     setMenu(5);
     if (!stepbystepslow) {
-      println("Starting fast simulation...");
       Date beforeSimulation = new Date();
-      for (int i = 0; i < 1000; i++) {
-        List<Creature> creaturesToSimulate = new ArrayList<Creature>();
-        creaturesToSimulate.add(creatures[i]);
-        List<SimulationResult> simResults = simulateCreaturesIn(creaturesToSimulate);
+      int simulationSlices = Runtime.getRuntime().availableProcessors();
+      println("Starting fast simulation on " + simulationSlices + " cores...");
+      int simulationSliceSize = 1000 / simulationSlices;
+      Thread[] simulationThreads = new Thread[simulationSlices];
+      for(int slice = 0; slice < simulationSlices; ++slice) {
+        final List<Creature> creaturesToSimulate = new ArrayList<Creature>();
+        for (int i = slice * simulationSliceSize; i < (slice + 1) * simulationSliceSize; i++) {
+          creaturesToSimulate.add(creatures[i]);
+        }
+        simulationThreads[slice] = new Thread() {
+          public void run() {
+            simulateCreaturesIn(creaturesToSimulate);
+          }
+        };
+        simulationThreads[slice].start();
+      }
+      
+      for(Thread thread: simulationThreads) {
+        try {
+          thread.join();
+        } catch(InterruptedException e) {
+        }
       }
       Date afterSimulation = new Date();
       long msForSimulation = afterSimulation.getTime() - beforeSimulation.getTime();
