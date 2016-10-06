@@ -283,6 +283,8 @@ class Menu3ViewController extends ViewController {
 static int fastSimulations = 0;
 static double averageTimeForSimulations = 0.0;
 
+static Date nonSimulationTime = new Date();
+
 // Segues to Menu5ViewController, Menu6ViewController
 class Menu4ViewController extends ViewController {
   void mouseReleased() {
@@ -321,6 +323,9 @@ class Menu4ViewController extends ViewController {
     setMenu(5);
     if (!stepbystepslow) {
       Date beforeSimulation = new Date();
+      long msForNonSimulation = beforeSimulation.getTime() - nonSimulationTime.getTime();
+      println("Non-simulation took " + msForNonSimulation + "ms");
+
       int simulationSlices = Runtime.getRuntime().availableProcessors();
       println("Starting fast simulation on " + simulationSlices + " cores...");
       int simulationSliceSize = 1000 / simulationSlices;
@@ -350,7 +355,7 @@ class Menu4ViewController extends ViewController {
       ++fastSimulations;
       averageTimeForSimulations = (averageTimeForSimulations * (fastSimulations - 1) + msForSimulation) / fastSimulations;
       println("Average sim time is " + averageTimeForSimulations + "ms");
-
+      nonSimulationTime = new Date();
       setMenu(6);
     }
   }
@@ -508,12 +513,15 @@ class Menu5ViewController extends ViewController {
 // Segues to menu 7 and 10
 class Menu6ViewController extends ViewController {
   void draw() {
+    Date beforeMenu6Draw = new Date();
     //sort
     creatures2 = new ArrayList<Creature>(0);
     for (int i = 0; i < 1000; i++) {
       creatures2.add(creatures[i]);
     }
+
     creatures2 = quickSort(creatures2);
+
     percentile.add(new Float[29]);
     for (int i = 0; i < 29; i++) {
       percentile.get(gen+1)[i] = creatures2.get(p[i]).simulatedFitness;
@@ -559,6 +567,10 @@ class Menu6ViewController extends ViewController {
     } else {
       setMenu(10);
     }
+    
+    Date afterMenu6Draw = new Date();
+    long msForDrawingMenu6 = afterMenu6Draw.getTime() - beforeMenu6Draw.getTime();
+    println("Drawing menu 6 took " + msForDrawingMenu6 + "ms");
   }
 }
 
