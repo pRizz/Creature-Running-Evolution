@@ -38,9 +38,25 @@ class Node {
     pvx = vx;
     pvy = vy;
   }
+
+  // takes and returns the new totalNodeNausea
+  float applyForcesRefactored(float totalNodeNausea) {
+    vx *= airFriction;
+    vy *= airFriction;
+    y += vy;
+    x += vx;
+    float acc = dist(vx, vy, pvx, pvy);
+    totalNodeNausea += acc*acc*nauseaUnit;
+    pvx = vx;
+    pvy = vy;
+    return totalNodeNausea;
+  }
+
   void applyGravity() {
     vy += gravity;
   }
+
+  // Does not mutate globals
   void pressAgainstGround(float groundY) {
     float dif = y-(groundY-m/2);
     pressure += dif*pressureUnit;
@@ -59,6 +75,8 @@ class Node {
       }
     }
   }
+
+  // Does not mutate globals
   void hitWalls() {
     pressure = 0;
     float dif = y+m/2;
@@ -209,6 +227,7 @@ class Node {
     return newNode;//max(m+r()*0.1,0.2),min(max(f+r()*0.1,0),1)
   }
 }
+
 class Muscle {
   int axon, c1, c2;
   float len;
@@ -268,7 +287,7 @@ class Muscle {
 class Creature {
   ArrayList<Node> n;
   ArrayList<Muscle> m;
-  float d;
+  float d; // TODO: Rename to simulatedFitness
   int id;
   boolean alive;
   float creatureTimer;
@@ -283,6 +302,7 @@ class Creature {
     creatureTimer = tct;
     mutability = tmut;
   }
+
   Creature modified(int id) {
     Creature modifiedCreature = new Creature(id, 
       new ArrayList<Node>(0), new ArrayList<Muscle>(0), 0, true, creatureTimer+r()*16*mutability, min(mutability*random(0.8, 1.25), 2));
@@ -309,6 +329,7 @@ class Creature {
     modifiedCreature.checkForBadAxons();
     return modifiedCreature;
   }
+
   void checkForOverlap() {
     ArrayList<Integer> bads = new ArrayList<Integer>();
     for (int i = 0; i < m.size(); i++) {
@@ -329,6 +350,7 @@ class Creature {
       }
     }
   }
+
   void checkForLoneNodes() {
     if (n.size() >= 3) {
       for (int i = 0; i < n.size(); i++) {
@@ -350,6 +372,7 @@ class Creature {
       }
     }
   }
+
   void checkForBadAxons() {
     for (int i = 0; i < n.size(); i++) {
       Node ni = n.get(i);
@@ -399,6 +422,7 @@ class Creature {
       }
     }
   }
+
   void addRandomNode() {
     int parentNode = floor(random(0, n.size()));
     float ang1 = random(0, 2*PI);
@@ -425,6 +449,7 @@ class Creature {
     addRandomMuscle(parentNode, n.size()-1);
     addRandomMuscle(nextClosestNode, n.size()-1);
   }
+
   void addRandomMuscle(int tc1, int tc2) {
     int axon = getNewMuscleAxon(n.size());
     if (tc1 == -1) {
@@ -440,6 +465,7 @@ class Creature {
     }
     m.add(new Muscle(axon, tc1, tc2, len, random(0.02, 0.08)));
   }
+
   void removeRandomNode() {
     int choice = floor(random(0, n.size()));
     n.remove(choice);
@@ -460,22 +486,73 @@ class Creature {
       }
     }
   }
+
   void removeRandomMuscle() {
     int choice = floor(random(0, m.size()));
     m.remove(choice);
   }
+
   Creature copyCreature(int newID) {
-    ArrayList<Node> n2 = new ArrayList<Node>(0);
-    ArrayList<Muscle> m2 = new ArrayList<Muscle>(0);
-    for (int i = 0; i < n.size(); i++) {
-      n2.add(this.n.get(i).copyNode());
-    }
-    for (int i = 0; i < m.size(); i++) {
-      m2.add(this.m.get(i).copyMuscle());
-    }
+    ArrayList<Node> n2 = copyOfNodes();
+    ArrayList<Muscle> m2 = copyOfMuscles();
     if (newID == -1) {
       newID = id;
     }
     return new Creature(newID, n2, m2, d, alive, creatureTimer, mutability);
+  }
+
+  float getAverageX() {
+    float averageX = 0;
+    for (Node node : n) {
+      averageX += node.x;
+    }
+    averageX = averageX/n.size();
+    return averageX;
+  }
+
+  float getAverageY() {
+    float averageY = 0;
+    for (Node node : n) {
+      averageY += node.y;
+    }
+    averageY = averageY/n.size();
+    return averageY;
+  }
+
+  // TODO: Replace the 'd' variable with this query
+  float getFitness() {
+    return getAverageX()*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
+  }
+
+  ArrayList<Node> copyOfNodes() {
+    ArrayList<Node> nodes = new ArrayList<Node>(n.size());
+    for (Node node : n) {
+      nodes.add(node.copyNode());
+    }
+    return nodes;
+  }
+
+  ArrayList<Muscle> copyOfMuscles() {
+    ArrayList<Muscle> muscles = new ArrayList<Muscle>(m.size());
+    for (Muscle muscle : m) {
+      muscles.add(muscle.copyMuscle());
+    }
+    return muscles;
+  }
+}
+
+class SimulationResult {
+  final float averageNodeNausea;
+  final int simulationTimer;
+  final int timer;
+  final float fitness;
+  final float totalNodeNausea;
+
+  SimulationResult(float averageNodeNausea, int simulationTimer, int timer, float fitness, float totalNodeNausea) {
+    this.averageNodeNausea = averageNodeNausea;
+    this.simulationTimer = simulationTimer;
+    this.timer = timer;
+    this.fitness = fitness;
+    this.totalNodeNausea = totalNodeNausea;
   }
 }

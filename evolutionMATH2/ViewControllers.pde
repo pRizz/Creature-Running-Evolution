@@ -315,6 +315,38 @@ class Menu4ViewController extends ViewController {
     }
   }
 
+  void newdraw() {
+    setGlobalVariables(creatures[creaturesTested]);
+    camZoom = 0.01;
+    setMenu(5);
+    if (!stepbystepslow) {
+      println("Starting fast simulation...");
+      Date beforeSimulation = new Date();
+      for (int i = 0; i < 1000; i++) {
+        setGlobalVariables(creatures[i]);
+        List<Creature> creaturesToSimulate = new ArrayList<Creature>();
+        creaturesToSimulate.add(creatures[i]);
+        List<SimulationResult> simResults = simulateCreaturesIn(creaturesToSimulate, simulationTimer, timer);
+        for (SimulationResult simResult : simResults) {
+          averageNodeNausea = simResult.averageNodeNausea;
+          simulationTimer = simResult.simulationTimer;
+          timer = simResult.timer;
+        }
+        //setAverages();
+        //setFitness(i);
+        setFitnessRefactored(i, creatures[i].getFitness());
+      }
+      Date afterSimulation = new Date();
+      long msForSimulation = afterSimulation.getTime() - beforeSimulation.getTime();
+      println("Simulation took " + msForSimulation + "ms");
+      ++fastSimulations;
+      averageTimeForSimulations = (averageTimeForSimulations * (fastSimulations - 1) + msForSimulation) / fastSimulations;
+      println("Average sim time is " + averageTimeForSimulations + "ms");
+
+      setMenu(6);
+    }
+  }
+
   void draw() {
     setGlobalVariables(creatures[creaturesTested]);
     camZoom = 0.01;

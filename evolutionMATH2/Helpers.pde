@@ -144,6 +144,41 @@ void simulate() {
   timer++;
 }
 
+// FIXME
+SimulationResult simulateRefactored(Creature creature, float totalNodeNausea, int simulationTimer, int timer) {
+  Creature creatureCopy = creature.copyCreature(creature.id);
+  ArrayList<Muscle> muscles = creatureCopy.m;
+  ArrayList<Node> nodes = creatureCopy.n;
+  
+  for (Muscle muscle : muscles) {
+    muscle.applyForce(nodes);
+  }
+  for (Node node : nodes) {
+    node.applyGravity();
+    totalNodeNausea = node.applyForcesRefactored(totalNodeNausea);
+    node.hitWalls();
+    node.doMath(nodes);
+  }
+  for (Node node : nodes) {
+    node.realizeMathValues();
+  }
+  creature.d = creatureCopy.getFitness();
+  return new SimulationResult(totalNodeNausea/nodes.size(), simulationTimer + 1, timer + 1, creature.getFitness(), totalNodeNausea);
+}
+
+List<SimulationResult> simulateCreaturesIn(List<Creature> creatures, int simulationTimer, int timer) {
+  List<SimulationResult> simulationResults = new ArrayList<SimulationResult>();
+  for (Creature creature : creatures) {
+    float totalNodeNausea = 0;
+    for (int s = 0; s < 900; s++) {
+      SimulationResult simResult = simulateRefactored(creature, totalNodeNausea, simulationTimer, timer);
+      totalNodeNausea = simResult.totalNodeNausea;
+      simulationResults.add(simResult);
+    }
+  }
+  return simulationResults;
+}
+
 void setAverages() {
   averageX = 0;
   averageY = 0;
@@ -249,6 +284,10 @@ void setFitness(int i) {
   creatures[i].d = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
 }
 
+void setFitnessRefactored(int creatureIndex, float fitness) {
+  creatures[creatureIndex].d = fitness; // Multiply by 0.2 because a meter is 5 units for some weird reason.
+}
+
 float actualMouseX() {
   return mouseX/windowSizeMultiplier;
 }
@@ -283,6 +322,6 @@ int calculateNextStatusWindow() {
       statusWindow = floor((actualMouseX()-760)/160)-3;
     }
   }
-  
+
   return statusWindow;
 }
