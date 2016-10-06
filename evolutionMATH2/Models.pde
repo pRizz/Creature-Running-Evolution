@@ -287,7 +287,7 @@ class Muscle {
 class Creature {
   ArrayList<Node> n;
   ArrayList<Muscle> m;
-  float d; // TODO: Rename to simulatedFitness
+  float simulatedFitness;
   int id;
   boolean alive;
   float creatureTimer;
@@ -297,7 +297,7 @@ class Creature {
     id = tid;
     m = tm;
     n = tn;
-    d = td;
+    simulatedFitness = td;
     alive = talive;
     creatureTimer = tct;
     mutability = tmut;
@@ -498,7 +498,7 @@ class Creature {
     if (newID == -1) {
       newID = id;
     }
-    return new Creature(newID, n2, m2, d, alive, creatureTimer, mutability);
+    return new Creature(newID, n2, m2, simulatedFitness, alive, creatureTimer, mutability);
   }
 
   float getAverageX() {

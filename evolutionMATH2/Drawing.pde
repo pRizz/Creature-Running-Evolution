@@ -555,7 +555,7 @@ void drawStatusWindow(boolean isFirstFrame) {
   textAlign(CENTER);
   text("#"+rank, px, py+12);
   text("ID: "+cj.id, px, py+24);
-  text("Fitness: "+nf(cj.d, 0, 3), px, py+36);
+  text("Fitness: "+nf(cj.simulatedFitness, 0, 3), px, py+36);
   colorMode(HSB, 1);
   int sp = (cj.n.size()%10)*10+(cj.m.size()%10);
   fill(getColor(sp, true));

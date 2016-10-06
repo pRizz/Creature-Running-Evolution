@@ -499,7 +499,7 @@ class Menu6ViewController extends ViewController {
     creatures2 = quickSort(creatures2);
     percentile.add(new Float[29]);
     for (int i = 0; i < 29; i++) {
-      percentile.get(gen+1)[i] = creatures2.get(p[i]).d;
+      percentile.get(gen+1)[i] = creatures2.get(p[i]).simulatedFitness;
     }
     creatureDatabase.add(creatures2.get(999).copyCreature(-1));
     creatureDatabase.add(creatures2.get(499).copyCreature(-1));
@@ -515,7 +515,7 @@ class Menu6ViewController extends ViewController {
       beginSpecies[i] = 0;
     }
     for (int i = 0; i < 1000; i++) {
-      int bar = floor(creatures2.get(i).d*histBarsPerMeter-minBar);
+      int bar = floor(creatures2.get(i).simulatedFitness*histBarsPerMeter-minBar);
       if (bar >= 0 && bar < barLen) {
         barCounts.get(gen+1)[bar]++;
       }

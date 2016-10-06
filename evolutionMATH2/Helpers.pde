@@ -2,9 +2,11 @@
 float inter(int a, int b, float offset) {
   return float(a)+(float(b)-float(a))*offset;
 }
+
 float r() {
   return pow(random(-1, 1), 19);
 }
+
 int rInt() {
   return int(random(-0.01, 1.01));
 }
@@ -75,9 +77,9 @@ ArrayList<Creature> quickSort(ArrayList<Creature> c) {
     equal.add(c0);
     for (int i = 1; i < c.size(); i++) {
       Creature ci = c.get(i);
-      if (ci.d == c0.d) {
+      if (ci.simulatedFitness == c0.simulatedFitness) {
         equal.add(ci);
-      } else if (ci.d < c0.d) {
+      } else if (ci.simulatedFitness < c0.simulatedFitness) {
         less.add(ci);
       } else {
         more.add(ci);
@@ -162,7 +164,7 @@ SimulationResult simulateRefactored(Creature creature, float totalNodeNausea, in
   for (Node node : nodes) {
     node.realizeMathValues();
   }
-  creature.d = creatureCopy.getFitness();
+  creature.simulatedFitness = creatureCopy.getFitness();
   return new SimulationResult(totalNodeNausea/nodes.size(), simulationTimer + 1, timer + 1, creature.getFitness(), totalNodeNausea);
 }
 
@@ -281,11 +283,11 @@ void setGlobalVariables(Creature thisCreature) {
 }
 
 void setFitness(int i) {
-  creatures[i].d = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
+  creatures[i].simulatedFitness = averageX*0.2; // Multiply by 0.2 because a meter is 5 units for some weird reason.
 }
 
 void setFitnessRefactored(int creatureIndex, float fitness) {
-  creatures[creatureIndex].d = fitness; // Multiply by 0.2 because a meter is 5 units for some weird reason.
+  creatures[creatureIndex].simulatedFitness = fitness; // Multiply by 0.2 because a meter is 5 units for some weird reason.
 }
 
 float actualMouseX() {
