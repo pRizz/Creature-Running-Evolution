@@ -105,6 +105,8 @@ class IntroViewController extends ViewController {
   }
 
   void draw() {
+    Date beforeMenuDraw = new Date();
+
     background(255);
     fill(100, 200, 100);
     noStroke();
@@ -112,6 +114,11 @@ class IntroViewController extends ViewController {
     fill(0);
     text("EVOLUTION!", windowWidth/2, 200);
     text("START", windowWidth/2, 430);
+    
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing intro took " + msForDrawingMenu + "ms");
+
   }
 }
 
@@ -158,6 +165,8 @@ class MainViewController extends ViewController {
   }
 
   void draw() {
+    Date beforeMenuDraw = new Date();
+
     noStroke();
     fill(0);
     background(255, 200, 130);
@@ -206,12 +215,18 @@ class MainViewController extends ViewController {
         startASAP();
       }
     }
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing main menu took " + msForDrawingMenu + "ms");
+
   }
 }
 
 // The "Here are your 1000 randomly generated creatures!!!" which displays the creatures as small
 class Menu2ViewController extends ViewController {
   void draw() {
+    Date beforeMenuDraw = new Date();
+
     background(220, 253, 102);
     pushMatrix();
     scale(10.0/scaleToFixBug);
@@ -262,6 +277,11 @@ class Menu2ViewController extends ViewController {
     textFont(font, 24);
     text("Here are your 1000 randomly generated creatures!!!", windowWidth/2-200, 690);
     text("Back", windowWidth-250, 690);
+    
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing menu 2 took " + msForDrawingMenu + "ms");
+
   }
 }
 
@@ -430,6 +450,7 @@ class Menu5ViewController extends ViewController {
   }
 
   void draw() { //simulate running
+    Date beforeMenuDraw = new Date();
     // TODO: Make the timer an instance variable/ non-global
     if (timer <= 900) {
       background(120, 200, 255);
@@ -490,6 +511,9 @@ class Menu5ViewController extends ViewController {
     if (timer >= 900) {
       timer += speed;
     }
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing menu 5 took " + msForDrawingMenu + "ms");
   }
 
   void mouseWheel(MouseEvent event) {
@@ -513,7 +537,7 @@ class Menu5ViewController extends ViewController {
 // Segues to menu 7 and 10
 class Menu6ViewController extends ViewController {
   void draw() {
-    Date beforeMenu6Draw = new Date();
+    Date beforeMenuDraw = new Date();
     //sort
     creatures2 = new ArrayList<Creature>(0);
     for (int i = 0; i < 1000; i++) {
@@ -568,9 +592,9 @@ class Menu6ViewController extends ViewController {
       setMenu(10);
     }
     
-    Date afterMenu6Draw = new Date();
-    long msForDrawingMenu6 = afterMenu6Draw.getTime() - beforeMenu6Draw.getTime();
-    println("Drawing menu 6 took " + msForDrawingMenu6 + "ms");
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing menu 6 took " + msForDrawingMenu + "ms");
   }
 }
 
@@ -596,6 +620,8 @@ class Menu8ViewController extends ViewController {
   }
 
   void draw() {
+    Date beforeMenuDraw = new Date();
+
     //cool sorting animation
     background(220, 253, 102);
     pushMatrix();
@@ -623,6 +649,10 @@ class Menu8ViewController extends ViewController {
       drawScreenImage(1);
       setMenu(9);
     }
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing menu 8 took " + msForDrawingMenu + "ms");
+
   }
 }
 
@@ -641,6 +671,7 @@ class Menu9ViewController extends ViewController {
 // Segues to menu 11 and 12
 class Menu10ViewController extends ViewController {
   void draw() {
+    Date beforeMenuDraw = new Date();
     //Kill!
     for (int j = 0; j < 500; j++) {
       float f = float(j)/1000;
@@ -666,6 +697,11 @@ class Menu10ViewController extends ViewController {
     } else {
       setMenu(12);
     }
+    
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing menu 10 took " + msForDrawingMenu + "ms");
+
   }
 }
 
@@ -682,6 +718,8 @@ class Menu11ViewController extends ViewController {
 
 class Menu12ViewController extends ViewController {
   void draw() { //Reproduce and mutate
+    Date beforeMenuDraw = new Date();
+
     justGotBack = true;
     for (int j = 0; j < 500; j++) {
       int j2 = j;
@@ -708,6 +746,11 @@ class Menu12ViewController extends ViewController {
     } else {
       setMenu(1);
     }
+    
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing menu 12 took " + msForDrawingMenu + "ms");
+
   }
 }
 
@@ -724,6 +767,8 @@ class Menu13ViewController extends ViewController {
 
 class PostDrawViewController extends ViewController {
   void draw() {
+    Date beforeMenuDraw = new Date();
+
     noStroke();
     if (gen >= 1) {
       textAlign(CENTER);
@@ -764,5 +809,10 @@ class PostDrawViewController extends ViewController {
       text("Best Creature", 1150, 310);
     }
     if (justGotBack) justGotBack = false;
+    
+    Date afterMenuDraw = new Date();
+    long msForDrawingMenu = afterMenuDraw.getTime() - beforeMenuDraw.getTime();
+    println("Drawing post-draw menu took " + msForDrawingMenu + "ms");
+
   }
 }
